@@ -1,0 +1,142 @@
+# Prometheus scrape 설정 — security-log-search 의 4개 핵심 메트릭 source 를 한 곳에서 수집.
+#
+# 본 파일은 Prometheus 의 `prometheus.yml` 의 `scrape_configs` 절에 그대로 복사할 수 있는
+# 형태입니다. Kubernetes 환경에서는 ServiceMonitor (Prometheus Operator) 로 변환하거나
+# 본 정의를 ConfigMap 으로 마운트해서 사용합니다.
+#
+# 메트릭 source:
+#   1. security-log-search service (Spring Boot actuator/prometheus)
+#   2. Apache Flink (job/task manager 의 prometheus reporter)
+#   3. ClickHouse (clickhouse-server 의 /metrics endpoint)
+#   4. OpenSearch (opensearch-prometheus-exporter 플러그인)
+#   5. Kafka (jmx-exporter 사이드카)
+
+scrape_configs:
+  # security-log-search service — Spring Boot actuator.
+  # bootstrap 모듈의 application.yml 에서 management.endpoints.web.exposure.include 에
+  # prometheus 가 포함되어 있어야 함 (본 repo 의 default 설정에 이미 들어있음).
+  - job_name: security-log-search
+    metrics_path: /actuator/prometheus
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    static_configs:
+      - targets:
+          - security-log-search.security.svc.cluster.local:8080
+        labels:
+          service: security-log-search
+          component: api
+
+  # Flink — TaskManager / JobManager 의 prometheus reporter.
+  # flink-conf.yaml 에서 metrics.reporter.prom.factory.class 설정 필요:
+  #   metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+  #   metrics.reporter.prom.port: 9249-9259
+  - job_name: flink-jobmanager
+    metrics_path: /
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets:
+          - flink-jobmanager.security.svc.cluster.local:9249
+        labels:
+          service: flink
+          role: jobmanager
+
+  - job_name: flink-taskmanager
+    metrics_path: /
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    # K8s 에서는 Endpoints 로 자동 발견 (kubernetes_sd_configs). 본 정적 형태는 docker-compose
+    # 또는 로컬 실험용. 운영은 service-discovery 권장.
+    static_configs:
+      - targets:
+          - flink-taskmanager.security.svc.cluster.local:9249
+        labels:
+          service: flink
+          role: taskmanager
+
+  # ClickHouse — 22.x 부터 /metrics endpoint 가 native 제공.
+  # config.xml 의 prometheus 절 활성화 필요:
+  #   <prometheus>
+  #     <endpoint>/metrics</endpoint>
+  #     <port>9363</port>
+  #     <metrics>true</metrics>
+  #     <events>true</events>
+  #     <asynchronous_metrics>true</asynchronous_metrics>
+  #   </prometheus>
+  - job_name: clickhouse
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets:
+          - clickhouse.security.svc.cluster.local:9363
+        labels:
+          service: clickhouse
+
+  # OpenSearch — opensearch-prometheus-exporter 플러그인 설치 후 /_prometheus/metrics endpoint.
+  - job_name: opensearch
+    metrics_path: /_prometheus/metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    scheme: http
+    static_configs:
+      - targets:
+          - opensearch.security.svc.cluster.local:9200
+        labels:
+          service: opensearch
+
+  # Kafka — JMX exporter 사이드카가 노출하는 메트릭. confluentinc/cp-kafka 이미지에는 보통
+  # 7071 포트로 노출됨. 본 repo 의 docker-compose 와 합의 필요.
+  - job_name: kafka
+    metrics_path: /metrics
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    static_configs:
+      - targets:
+          - kafka.security.svc.cluster.local:7071
+        labels:
+          service: kafka
+
+# ---------------------------------------------------------------------------
+# Recording rules — 자주 쓰는 query 를 미리 계산해서 dashboard 가 빠르게 뜨게 한다.
+# 별도 파일 (rules.yaml) 로 분리해서 prometheus.yml 의 rule_files 에 등록.
+# ---------------------------------------------------------------------------
+
+# rule_files:
+#   - /etc/prometheus/rules/security-log-search.rules.yaml
+#
+# groups:
+#   - name: security-log-search-recording
+#     interval: 30s
+#     rules:
+#       - record: sls:ingest:rate5m
+#         expr: sum by (source, tenant) (rate(security_log_ingest_total[5m]))
+#       - record: sls:search:p99_seconds
+#         expr: histogram_quantile(0.99, sum by (type, le) (rate(security_log_search_latency_seconds_bucket[5m])))
+#       - record: sls:alerts:rate1h
+#         expr: sum by (severity, tenant) (rate(security_log_alert_fired_total[1h]))
+#
+# Alerting rule 예 (별도 alert.rules.yaml 에 분리 권장):
+#
+# groups:
+#   - name: security-log-search-alerts
+#     rules:
+#       - alert: IngestRateDropped
+#         expr: sum(rate(security_log_ingest_total[5m])) < 0.5 * sum(rate(security_log_ingest_total[1h] offset 1h))
+#         for: 5m
+#         labels: { severity: warning }
+#         annotations:
+#           summary: "ingest rate 가 1시간 전 대비 50% 이하로 하락"
+#           runbook: "docs/runbook/ingest-throughput-drop.md"
+#       - alert: SearchLatencyHigh
+#         expr: histogram_quantile(0.99, sum by (type, le) (rate(security_log_search_latency_seconds_bucket{type="opensearch"}[5m]))) > 1.5
+#         for: 10m
+#         labels: { severity: warning }
+#         annotations:
+#           summary: "OpenSearch p99 가 SLO (1.5s) 를 초과"
+#       - alert: FlinkBackpressureHigh
+#         expr: max by (job_name) (flink_taskmanager_job_task_backPressuredTimeMsPerSecond / 1000) > 0.6
+#         for: 5m
+#         labels: { severity: warning }
+#         annotations:
+#           summary: "Flink backpressure ratio > 0.6 — downstream 병목"

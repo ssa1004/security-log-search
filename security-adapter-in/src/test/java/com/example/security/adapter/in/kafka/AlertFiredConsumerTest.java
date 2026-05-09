@@ -2,11 +2,13 @@ package com.example.security.adapter.in.kafka;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.security.adapter.in.metrics.SecurityLogMetrics;
 import com.example.security.application.port.in.EvaluateAlertUseCase;
 import com.example.security.domain.common.Severity;
 import com.example.security.domain.rule.Alert.AlertStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -17,7 +19,10 @@ class AlertFiredConsumerTest {
   @Test
   void Flink_가_보낸_payload_파싱() {
     var consumer =
-        new AlertFiredConsumer(Mockito.mock(EvaluateAlertUseCase.class), json);
+        new AlertFiredConsumer(
+            Mockito.mock(EvaluateAlertUseCase.class),
+            json,
+            new SecurityLogMetrics(new SimpleMeterRegistry()));
 
     var payload =
         """
