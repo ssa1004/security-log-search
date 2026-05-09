@@ -46,7 +46,7 @@ public record AlertRule(
     Severity severity,
     boolean enabled,
     Instant createdAt,
-    Instant updatedAt) {
+    Instant updatedAt) implements java.io.Serializable {
 
   public AlertRule {
     Objects.requireNonNull(ruleId);

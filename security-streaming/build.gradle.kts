@@ -29,7 +29,9 @@ dependencies {
 
     // Kafka source / sink connector.
     compileOnly("org.apache.flink:flink-connector-kafka:3.2.0-1.18")
+    compileOnly("org.apache.flink:flink-connector-base:1.18.1")
     testImplementation("org.apache.flink:flink-connector-kafka:3.2.0-1.18")
+    testImplementation("org.apache.flink:flink-connector-base:1.18.1")
 
     // JSON 직렬화 — Flink 기본은 POJO serializer 라 record / nested type 은 Jackson 권장.
     implementation("com.fasterxml.jackson.core:jackson-databind")
@@ -38,4 +40,20 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.assertj:assertj-core")
     testImplementation("org.junit.jupiter:junit-jupiter")
+}
+
+// Flink + Java 17+ 모듈 시스템 — Kryo serializer 가 java.util / java.lang 의 private field 접근.
+// 본 옵션은 Flink 운영 클러스터에서 실제 jobmanager / taskmanager 의 JVM_ARGS 로도 동일하게 추가 필요.
+tasks.withType<Test> {
+    jvmArgs(
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+        "--add-opens=java.base/java.time=ALL-UNNAMED",
+        "--add-opens=java.base/java.io=ALL-UNNAMED",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "--add-opens=java.base/java.nio=ALL-UNNAMED",
+        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED")
 }

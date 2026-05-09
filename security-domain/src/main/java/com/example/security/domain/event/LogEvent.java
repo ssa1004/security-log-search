@@ -26,6 +26,7 @@ import java.util.UUID;
  *   <li>{@code labels} — 자유 형식 key-value (raw 에서 정규화 안 된 항목)
  * </ul>
  */
+@SuppressWarnings("ClassCanBeRecord")
 public record LogEvent(
     /** 이벤트 식별자. idempotency 키이자 OpenSearch _id, ClickHouse event_id 로 사용. */
     UUID eventId,
@@ -64,7 +65,7 @@ public record LogEvent(
     /** ECS message — 사람이 읽는 한 줄 요약. */
     String message,
     /** 자유형 라벨 — 정규화 안 된 raw 필드 보관. */
-    Map<String, String> labels) {
+    Map<String, String> labels) implements java.io.Serializable {
 
   public LogEvent {
     Objects.requireNonNull(eventId, "eventId");

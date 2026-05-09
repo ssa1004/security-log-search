@@ -28,7 +28,7 @@ public record Alert(
     Instant firedAt,
     AlertStatus status,
     List<UUID> triggeringEventIds,
-    String message) {
+    String message) implements java.io.Serializable {
 
   public Alert {
     Objects.requireNonNull(alertId);
