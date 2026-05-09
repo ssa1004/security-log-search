@@ -241,6 +241,14 @@ ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매
 - **Audit 보존**: `audit_entries` 5년 (ISMS-P 권고). 별도 archive cold storage 로 이관.
 - **알람 처리**: `POST /api/v1/alerts/{id}/ack` 로 운영자 확인 처리 → audit_entries 자동 기록.
 
+### Runbook
+
+장애 / 이상 상황별 대응 절차는 `docs/runbook/` 에 시나리오 단위로 정리:
+
+- [`ingest-throughput-drop.md`](docs/runbook/ingest-throughput-drop.md) — ingest rate 가 평소 대비 50% 이하로 하락
+- [`flink-job-not-progressing.md`](docs/runbook/flink-job-not-progressing.md) — Flink correlation job lag 누적 / checkpoint 실패
+- [`alert-storm.md`](docs/runbook/alert-storm.md) — 알람 발화 폭주 (실제 사고 vs false positive 판정 / 룰 mute 절차)
+
 ## GitOps / 배포
 
 - `infrastructure/helm/security-log-search/` — Helm chart (env 별 `values-{env}.yaml`)
