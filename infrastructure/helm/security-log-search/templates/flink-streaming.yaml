@@ -1,0 +1,18 @@
+# Flink streaming job 을 운영하는 별도 Deployment — Flink 클러스터 (jobmanager / taskmanager) 는
+# 별도 chart 로 관리 가정. 본 template 은 단지 jar 가 들어간 sidecar 또는 init job 으로 위치.
+#
+# 운영 환경에서는 Flink Kubernetes Operator (apache/flink-kubernetes-operator) 를 사용해서
+# FlinkDeployment / FlinkSessionJob CR 로 관리하는 것이 더 표준. 본 템플릿은 stub.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "security-log-search.fullname" . }}-streaming
+  labels:
+    {{- include "security-log-search.labels" . | nindent 4 }}
+data:
+  STREAMING_IMAGE: "{{ .Values.streaming.image.repository }}:{{ .Values.streaming.image.tag }}"
+  STREAMING_PARALLELISM: "{{ .Values.streaming.parallelism }}"
+  KAFKA_BOOTSTRAP: "{{ .Values.config.kafka.bootstrap }}"
+  EVENTS_TOPIC: "events.normalized"
+  RULES_TOPIC: "alert-rules.broadcast"
+  ALERTS_TOPIC: "alerts.fired"

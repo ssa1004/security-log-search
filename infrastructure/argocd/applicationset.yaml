@@ -1,0 +1,58 @@
+# ArgoCD ApplicationSet — env (dev / staging / prod) 별로 Application 자동 생성.
+#
+# 본 manifest 는 ArgoCD 가 설치된 cluster 의 argocd namespace 에 적용한다.
+# 각 env 의 namespace / values-{env}.yaml 이 자동 매핑된다.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: security-log-search
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            cluster: in-cluster
+            destinationServer: https://kubernetes.default.svc
+            namespace: security-log-search-dev
+          - env: staging
+            cluster: in-cluster
+            destinationServer: https://kubernetes.default.svc
+            namespace: security-log-search-staging
+          - env: prod
+            cluster: in-cluster
+            destinationServer: https://kubernetes.default.svc
+            namespace: security-log-search-prod
+  template:
+    metadata:
+      name: security-log-search-{{env}}
+      labels:
+        env: "{{env}}"
+        app.kubernetes.io/name: security-log-search
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/ssa1004/security-log-search
+        targetRevision: main
+        path: infrastructure/helm/security-log-search
+        helm:
+          releaseName: security-log-search
+          valueFiles:
+            - values.yaml
+            - values-{{env}}.yaml
+      destination:
+        server: "{{destinationServer}}"
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 30s
+            factor: 2
+            maxDuration: 5m

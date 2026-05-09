@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "security-log-search.fullname" . }}
+  labels:
+    {{- include "security-log-search.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "security-log-search.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        {{- include "security-log-search.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      serviceAccountName: {{ include "security-log-search.fullname" . }}
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.config.springProfile | quote }}
+            - name: KAFKA_BOOTSTRAP
+              value: {{ .Values.config.kafka.bootstrap | quote }}
+            - name: OPENSEARCH_HOST
+              value: {{ .Values.config.opensearch.host | quote }}
+            - name: OPENSEARCH_PORT
+              value: {{ .Values.config.opensearch.port | quote }}
+            - name: OPENSEARCH_SCHEME
+              value: {{ .Values.config.opensearch.scheme | quote }}
+            - name: CLICKHOUSE_URL
+              value: {{ .Values.config.clickhouse.url | quote }}
+            - name: CLICKHOUSE_USER
+              value: {{ .Values.config.clickhouse.user | quote }}
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "security-log-search.fullname" . }}-secrets
+                  key: clickhouse-password
+            - name: OAUTH_ISSUER_URI
+              value: {{ .Values.config.oauth.issuerUri | quote }}
+            - name: DB_HOST
+              value: {{ .Values.config.postgres.host | quote }}
+            - name: DB_PORT
+              value: {{ .Values.config.postgres.port | quote }}
+            - name: DB_NAME
+              value: {{ .Values.config.postgres.name | quote }}
+            - name: DB_USER
+              value: {{ .Values.config.postgres.user | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "security-log-search.fullname" . }}-secrets
+                  key: db-password
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 15"]
