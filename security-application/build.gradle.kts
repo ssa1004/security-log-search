@@ -10,6 +10,7 @@ dependencies {
     implementation("org.springframework:spring-context")
     implementation("org.springframework:spring-tx")
     implementation("jakarta.validation:jakarta.validation-api")
+    implementation("org.slf4j:slf4j-api")
 
     // Resilience4j fallback 어노테이션 — 외부 호출 (OpenSearch / ClickHouse) 보호.
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
