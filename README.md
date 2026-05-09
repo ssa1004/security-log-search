@@ -195,9 +195,26 @@ ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매
 - **Audit 보존**: `audit_entries` 5년 (ISMS-P 권고). 별도 archive cold storage 로 이관.
 - **알람 처리**: `POST /api/v1/alerts/{id}/ack` 로 운영자 확인 처리 → audit_entries 자동 기록.
 
+## GitOps / 배포
+
+- `infrastructure/helm/security-log-search/` — Helm chart (env 별 `values-{env}.yaml`)
+- `infrastructure/argocd/applicationset.yaml` — dev / staging / prod 3개 Application 자동 생성
+- 자세한 사용법은 [infrastructure/argocd/README.md](infrastructure/argocd/README.md)
+
 ## 향후 개선
 
 - ML 기반 anomaly detection (현재는 룰 기반만, 추후 unsupervised baseline)
 - Sigma 룰 import (Sigma — 벤더 중립 SIEM 룰 포맷, ECS 와 함께 유럽계 보안 커뮤니티 표준)
 - 추가 source 어댑터: AWS CloudTrail, Microsoft Graph Security, Kubernetes audit
 - ClickHouse projection / aggregating MergeTree 추가 검토
+- Flink Kubernetes Operator (apache/flink-kubernetes-operator) 로 streaming job 관리
+
+## 수동 GitHub push
+
+`gh` CLI 가 없는 환경이면 다음으로 push.
+
+```bash
+git remote add origin https://github.com/ssa1004/security-log-search.git
+git branch -M main
+git push -u origin main
+```
