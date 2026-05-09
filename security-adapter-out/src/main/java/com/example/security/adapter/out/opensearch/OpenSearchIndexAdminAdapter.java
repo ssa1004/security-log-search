@@ -16,6 +16,7 @@ import org.opensearch.client.opensearch.indices.PutIndexTemplateRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
+@ConditionalOnProperty(name = "security.opensearch.enabled", havingValue = "true", matchIfMissing = false)
 public class OpenSearchIndexAdminAdapter implements IndexAdminPort {
 
   private final OpenSearchClient client;

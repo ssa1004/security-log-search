@@ -11,13 +11,23 @@ dependencies {
     implementation(project(":security-adapter-out"))
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.kafka:spring-kafka")
     implementation("org.flywaydb:flyway-core")
     implementation("io.micrometer:micrometer-registry-prometheus")
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("com.h2database:h2")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
+    // OpenSearch / ClickHouse 클라이언트는 conditional 로 켜지지만 컴파일 시점에는 필요.
+    implementation("org.opensearch.client:opensearch-java:2.10.4")
+    implementation("org.opensearch.client:opensearch-rest-client:2.18.0")
+    // OpenSearch transport 가 의존하는 httpcore5 — Spring Boot 가 직접 관리하지 않음.
+    implementation("org.apache.httpcomponents.core5:httpcore5:5.2.5")
+    implementation("com.clickhouse:clickhouse-jdbc:0.6.5:all")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
 }
 
 springBoot {

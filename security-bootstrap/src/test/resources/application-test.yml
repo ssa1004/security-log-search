@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:security-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: localhost:65535     # 의도적 invalid — context 로딩만 보고 실 connect 안 함
+    listener:
+      auto-startup: false                  # consumer 시작 안 함
+
+security:
+  opensearch:
+    enabled: false
+  clickhouse:
+    enabled: false
