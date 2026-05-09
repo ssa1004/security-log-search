@@ -1,0 +1,25 @@
+title: Multiple Failed Logins From Single Source
+id: 8d63e8c1-2c2e-4d6f-9c3b-3a8a3a0b1aa1
+status: stable
+description: |
+  같은 source IP 로 5분 안에 인증 실패가 반복되는 brute-force 의심 패턴.
+  본 시스템 매퍼는 logsource.category=authentication + selection.event.outcome=failure 를
+  AlertRule (THRESHOLD 5건 / 5분 / source.ip 기준) 으로 자동 변환한다.
+references:
+  - https://attack.mitre.org/techniques/T1110/
+author: security-log-search demo
+date: 2026/01/01
+tags:
+  - attack.credential_access
+  - attack.t1110
+logsource:
+  category: authentication
+  product: linux
+detection:
+  selection:
+    event.outcome: failure
+    event.action: logon
+  condition: selection
+falsepositives:
+  - 사용자 비밀번호 변경 직후 캐시된 자격 증명을 가진 클라이언트 (브라우저 / 모바일 앱)
+level: high
