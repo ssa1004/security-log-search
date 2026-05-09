@@ -103,6 +103,31 @@ graph LR
 4. **Query rewrite**: SearchService 내부에서 사용자가 보낸 query 에 tenant filter 를 강제로
    AND 결합 — 사용자가 우회 불가.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as 운영자 (acme)
+    participant API as REST API
+    participant Sec as SecurityFilterChain
+    participant Svc as SearchService
+    participant OS as OpenSearch
+    participant CH as ClickHouse
+
+    U->>API: POST /search { q: "*" } + JWT
+    API->>Sec: JWT 검증 + tenant claim 추출
+    Note over Sec: claim.tenant_id = "acme"
+    Sec->>Svc: OperatorContext(tenant=acme) 주입
+    Svc->>Svc: query rewrite — q AND tenantId:acme
+    par OpenSearch 경로
+        Svc->>OS: GET events-acme-read/_search
+        Note over OS: alias 가 acme 인덱스만 가리킴 (1)
+    and ClickHouse 경로
+        Svc->>CH: SET tenant_id='acme'; SELECT ...
+        Note over CH: Row Policy 가 tenant_id 일치 행만 (2)
+    end
+    Note over U,CH: 다른 tenant (globex) 인덱스 / 행은<br/>4 layer 모두에서 차단됨
+```
+
 자세한 내용은 [ADR-0007](docs/adr/0007-multi-tenant-isolation.md).
 
 ## 기술 스택
@@ -119,7 +144,8 @@ graph LR
 - **Observability**: Micrometer + Prometheus
 - **API doc**: springdoc-openapi (Swagger UI)
 - **Build / CI**: Gradle 8, GitHub Actions, Docker multi-stage, Helm + ArgoCD
-- **Test**: JUnit 5 + Mockito + Testcontainers + Flink LocalExecutionEnvironment
+- **Test**: JUnit 5 + Mockito + Testcontainers, Flink correlation 은 ProcessFunction 직접 호출
+  (1.18 + Java 17+ record 직렬화 이슈로 LocalExecutionEnvironment 통합 테스트는 1.19 업그레이드 후 복귀 예정)
 
 ## 빠른 실행
 
@@ -187,6 +213,9 @@ ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매
 | [0010](docs/adr/0010-isms-p-control-mapping.md) | ISMS-P 통제 매핑 |
 | [0011](docs/adr/0011-audit-log-append-only.md) | Audit log — append-only PostgreSQL + 보존 5년 |
 | [0012](docs/adr/0012-pii-masking-retention.md) | PII 마스킹 + 보존 정책 |
+| [0013](docs/adr/0013-sigma-rule-import.md) | Sigma 룰 import → AlertRule 변환 |
+| [0014](docs/adr/0014-source-adapter-cloudtrail-k8s.md) | source 매퍼 분리 — CloudTrail / K8s audit → ECS |
+| [0015](docs/adr/0015-observability-dashboards.md) | 운영 대시보드 — RED + USE 모델 기반 |
 
 ## 운영 가이드 (간단)
 
@@ -206,10 +235,12 @@ ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매
 ## 향후 개선
 
 - ML 기반 anomaly detection (현재는 룰 기반만, 추후 unsupervised baseline)
-- Sigma 룰 import (Sigma — 벤더 중립 SIEM 룰 포맷, ECS 와 함께 유럽계 보안 커뮤니티 표준)
-- 추가 source 어댑터: AWS CloudTrail, Microsoft Graph Security, Kubernetes audit
+- Sigma 룰 source 자동 sync (현재는 수동 import — SigmaHQ 공식 repo 의 정기 pull / 검증 파이프라인)
+- 추가 source 어댑터: Microsoft Graph Security, Okta system log, Crowdstrike Falcon stream
+  (현재는 syslog / firewall / EDR / CloudTrail / K8s audit 까지 — ADR-0014)
 - ClickHouse projection / aggregating MergeTree 추가 검토
 - Flink Kubernetes Operator (apache/flink-kubernetes-operator) 로 streaming job 관리
+- Flink 1.19+ 업그레이드 — `LocalExecutionEnvironment` 통합 테스트 복귀 (record 직렬화 이슈 해결됨)
 
 ## 수동 GitHub push
 

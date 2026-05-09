@@ -13,7 +13,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -130,11 +129,5 @@ class CorrelationFlinkLocalTest {
         "linux",
         "Failed login",
         java.util.Map.of());
-  }
-
-  // unused — 향후 Flink 1.19+ 로 업그레이드 시 LocalExecutionEnvironment 통합 테스트 복귀.
-  @SuppressWarnings("unused")
-  private static List<String> placeholder() {
-    return List.of();
   }
 }
