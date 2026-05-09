@@ -1,0 +1,39 @@
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.fleet/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 빌드 산출물 — adapter/out/ 같은 hexagonal 패키지를 잡지 않도록 좁게.
+/out/
+*/out/
+!**/src/**/out/
+
+# 로그 / 임시
+*.log
+*.tmp
+
+# 작업 메모 (commit 금지)
+PLAN.md
+TODO.md
+notes.md
+.codex/
+.claude/
+
+# 환경 변수
+.env
+.env.local
+*.pem
+*.key
