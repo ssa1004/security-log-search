@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  *   <li>하이픈으로 시작 / 끝 금지
  * </ul>
  */
-public record TenantId(String value) {
+public record TenantId(String value) implements java.io.Serializable {
 
   private static final Pattern VALID = Pattern.compile("^[a-z0-9][a-z0-9-]{0,30}[a-z0-9]$");
 
