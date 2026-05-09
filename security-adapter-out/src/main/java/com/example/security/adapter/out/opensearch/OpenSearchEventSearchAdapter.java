@@ -30,6 +30,7 @@ import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -44,6 +45,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
+@ConditionalOnProperty(name = "security.opensearch.enabled", havingValue = "true", matchIfMissing = false)
 public class OpenSearchEventSearchAdapter implements EventSearchPort {
 
   private final OpenSearchClient client;

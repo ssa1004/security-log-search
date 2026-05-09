@@ -6,6 +6,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
  * </pre>
  */
 @Component
+@ConditionalOnProperty(name = "security.clickhouse.enabled", havingValue = "true", matchIfMissing = false)
 public class ClickHouseRowPolicyProvisioner {
 
   private static final Logger log = LoggerFactory.getLogger(ClickHouseRowPolicyProvisioner.class);

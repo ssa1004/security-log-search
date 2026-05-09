@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Component;
  * 최적화.
  */
 @Component
+@ConditionalOnProperty(name = "security.clickhouse.enabled", havingValue = "true", matchIfMissing = false)
 public class ClickHouseEventStatsAdapter implements EventStatsPort {
 
   private final DataSource dataSource;
