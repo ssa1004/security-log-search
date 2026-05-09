@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: security-log-search
+  labels:
+    name: security-log-search
+    app.kubernetes.io/managed-by: helm
