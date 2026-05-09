@@ -1,0 +1,34 @@
+replicaCount: 5
+
+resources:
+  requests:
+    cpu: 1
+    memory: 2Gi
+  limits:
+    cpu: "4"
+    memory: 4Gi
+
+autoscaling:
+  minReplicas: 5
+  maxReplicas: 24
+  targetCpuUtilization: 65
+
+podDisruptionBudget:
+  minAvailable: 3
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: security-log.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: security-log-tls
+      hosts: [security-log.example.com]
+
+streaming:
+  parallelism: 8

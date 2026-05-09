@@ -1,0 +1,82 @@
+# 기본값 — env 별로 values-dev.yaml / values-staging.yaml / values-prod.yaml 이 override.
+
+image:
+  repository: ghcr.io/ssa1004/security-log-search
+  tag: main
+  pullPolicy: IfNotPresent
+
+streaming:
+  image:
+    repository: ghcr.io/ssa1004/security-log-search-streaming
+    tag: main
+    pullPolicy: IfNotPresent
+  parallelism: 2
+
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+  targetCpuUtilization: 70
+  targetMemoryUtilization: 75
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: security-log.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+config:
+  springProfile: prod
+  kafka:
+    bootstrap: kafka.kafka.svc.cluster.local:9092
+  opensearch:
+    host: opensearch.opensearch.svc.cluster.local
+    port: 9200
+    scheme: http
+  clickhouse:
+    url: jdbc:clickhouse://clickhouse.clickhouse.svc.cluster.local:8123/default
+    user: default
+  oauth:
+    issuerUri: https://auth.example.com
+  postgres:
+    host: postgres.postgres.svc.cluster.local
+    port: 5432
+    name: security
+    user: security
+
+# Secret values — 실 운영에서는 Sealed Secret / External Secret 으로 주입.
+secrets:
+  dbPassword: change-me
+  clickHousePassword: change-me
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+
+networkPolicy:
+  enabled: true

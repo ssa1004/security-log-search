@@ -1,0 +1,17 @@
+apiVersion: v2
+name: security-log-search
+description: SIEM 형태의 보안 로그 수집 / 검색 / 알람 플랫폼
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+maintainers:
+  - name: ssa1004
+    email: wittyahn@users.noreply.github.com
+keywords:
+  - security
+  - siem
+  - opensearch
+  - clickhouse
+  - flink
+  - ecs
+  - ocsf

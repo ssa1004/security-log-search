@@ -1,0 +1,27 @@
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+config:
+  springProfile: dev
+  oauth:
+    issuerUri: ""
+
+monitoring:
+  serviceMonitor:
+    enabled: false
+
+networkPolicy:
+  enabled: false
