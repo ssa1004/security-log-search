@@ -186,6 +186,21 @@ flink run -c com.example.security.streaming.AlertCorrelationJob \
   security-streaming/build/libs/security-streaming-0.1.0.jar
 ```
 
+### Sigma 룰 import → AlertRule → Flink → Alert 데모
+
+`scripts/sample-sigma-rules/` 의 4 개 SigmaHQ 포맷 룰 (brute-force, port scan, suspicious
+PowerShell, off-hours admin logon) 을 한 번에 import 하고, brute-force 트리거 이벤트를
+발사해 알람까지 도달하는 흐름을 보여줍니다.
+
+```bash
+./scripts/seed_demo_data.sh                  # 1) tenant 'globex' 추가 + 기본 룰 1건
+./scripts/import_sigma_demo.sh               # 2) Sigma 4개 import + 트리거 이벤트
+curl -s 'http://localhost:8080/api/v1/alerts?tenantId=acme' | jq    # 3) 알람 확인
+```
+
+`scripts/sample-sigma-rules/` 의 YAML 은 [SampleSigmaRulesIntegrationTest](security-application/src/test/java/com/example/security/application/sigma/SampleSigmaRulesIntegrationTest.java)
+가 매번 parse + 변환을 검증하므로 mapper 가 변경되면 데모도 같이 깨져 stale 안 됨.
+
 ## ISMS-P 통제 매핑
 
 ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매핑은 [ADR-0010](docs/adr/0010-isms-p-control-mapping.md)

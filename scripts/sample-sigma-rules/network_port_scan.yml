@@ -1,0 +1,25 @@
+title: Outbound Port Scan From Internal Host
+id: 4d2e5f3a-9b1c-4f0a-bd71-2c5e2e7f9b22
+status: experimental
+description: |
+  내부 호스트에서 짧은 시간 안에 다수의 외부 IP 로 connection 을 시도 — 침해 후
+  횡적 이동 / 정찰 (reconnaissance) 의 전조.
+references:
+  - https://attack.mitre.org/techniques/T1046/
+author: security-log-search demo
+date: 2026/01/01
+tags:
+  - attack.discovery
+  - attack.t1046
+logsource:
+  category: network_connection
+  product: firewall
+detection:
+  selection:
+    event.action: connection_attempted
+    event.outcome: success
+  condition: selection
+falsepositives:
+  - vulnerability scanner (Nessus / Qualys) 의 인가된 정기 스캔
+  - K8s readiness probe 가 비정상적으로 많아진 경우
+level: medium
