@@ -46,13 +46,13 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    domain[security-domain<br/>LogEvent (ECS) + AlertRule + Tenant + AuditEntry]
-    app[security-application<br/>9 use case + port]
-    in[security-adapter-in<br/>REST + Kafka consumer]
-    out[security-adapter-out<br/>JPA + Kafka producer + OpenSearch + ClickHouse]
-    streaming[security-streaming<br/>Flink job (별도 jar, Spring 미포함)]
-    boot[security-bootstrap<br/>Boot main + Flyway]
-    e2e[e2e-tests<br/>Testcontainers]
+    domain["security-domain<br/>LogEvent (ECS) + AlertRule + Tenant + AuditEntry"]
+    app["security-application<br/>9 use case + port"]
+    in["security-adapter-in<br/>REST + Kafka consumer"]
+    out["security-adapter-out<br/>JPA + Kafka producer + OpenSearch + ClickHouse"]
+    streaming["security-streaming<br/>Flink job (별도 jar, Spring 미포함)"]
+    boot["security-bootstrap<br/>Boot main + Flyway"]
+    e2e["e2e-tests<br/>Testcontainers"]
 
     in --> app
     out --> app
