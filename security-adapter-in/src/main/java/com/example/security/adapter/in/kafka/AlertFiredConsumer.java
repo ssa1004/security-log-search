@@ -1,5 +1,6 @@
 package com.example.security.adapter.in.kafka;
 
+import com.example.security.adapter.in.metrics.SecurityLogMetrics;
 import com.example.security.application.port.in.EvaluateAlertUseCase;
 import com.example.security.domain.common.Severity;
 import com.example.security.domain.common.TenantId;
@@ -35,10 +36,12 @@ public class AlertFiredConsumer {
 
   private final EvaluateAlertUseCase useCase;
   private final ObjectMapper json;
+  private final SecurityLogMetrics metrics;
 
-  public AlertFiredConsumer(EvaluateAlertUseCase useCase, ObjectMapper json) {
+  public AlertFiredConsumer(EvaluateAlertUseCase useCase, ObjectMapper json, SecurityLogMetrics metrics) {
     this.useCase = useCase;
     this.json = json;
+    this.metrics = metrics;
   }
 
   @KafkaListener(
@@ -52,6 +55,7 @@ public class AlertFiredConsumer {
     try {
       var alert = parseAlert(payload);
       useCase.handleFired(alert);
+      metrics.recordAlertFired(alert.ruleId().toString(), alert.severity().name(), alert.tenantId().value());
     } catch (RuntimeException e) {
       // log + (운영) DLQ topic 으로 publish — DLQ wiring 은 ErrorHandler 에서 한다.
       log.error("alerts.fired 처리 실패: partition={} offset={}", partition, offset, e);

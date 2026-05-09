@@ -1,5 +1,6 @@
 package com.example.security.adapter.in.rest.controller;
 
+import com.example.security.adapter.in.metrics.SecurityLogMetrics;
 import com.example.security.adapter.in.rest.dto.StatsResponse;
 import com.example.security.adapter.in.security.OperatorContextResolver;
 import com.example.security.application.port.in.AggregateLogStatsUseCase;
@@ -7,6 +8,7 @@ import com.example.security.application.query.StatsQuery;
 import com.example.security.application.query.StatsQuery.Bucket;
 import com.example.security.domain.common.TenantId;
 import jakarta.validation.constraints.NotBlank;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +25,15 @@ public class StatsController {
 
   private final AggregateLogStatsUseCase useCase;
   private final OperatorContextResolver operators;
+  private final SecurityLogMetrics metrics;
 
-  public StatsController(AggregateLogStatsUseCase useCase, OperatorContextResolver operators) {
+  public StatsController(
+      AggregateLogStatsUseCase useCase,
+      OperatorContextResolver operators,
+      SecurityLogMetrics metrics) {
     this.useCase = useCase;
     this.operators = operators;
+    this.metrics = metrics;
   }
 
   @GetMapping
@@ -48,7 +55,10 @@ public class StatsController {
     termFilters.remove("topN");
 
     var query = new StatsQuery(TenantId.of(tenantId), from, to, bucket, groupByField, topN, termFilters);
+    var startNanos = System.nanoTime();
     var result = useCase.aggregate(query, operators.currentOperator());
+    metrics.recordSearchLatency(
+        tenantId, "clickhouse", Duration.ofNanos(System.nanoTime() - startNanos));
     return ResponseEntity.ok(StatsResponse.from(result));
   }
 }
