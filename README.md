@@ -7,7 +7,9 @@
 듀얼 sink 합니다. Apache Flink 로 실시간 correlation rule (상관 규칙) 을 평가해서 알람을
 발화합니다.
 
-자세한 설계 의사결정은 [docs/adr/](docs/adr/) 의 ADR 12건을 참고하세요.
+자세한 설계 의사결정은 [docs/adr/](docs/adr/) 의 ADR 15건을 참고하세요 — ECS / OCSF, ClickHouse +
+OpenSearch 듀얼 sink, Kafka + Flink correlation, Multi-tenant 4-layer 격리, ISMS-P 통제 매핑,
+Sigma 룰 import, CloudTrail / K8s audit 어댑터, 운영 dashboard 등.
 
 ## 처리 흐름
 
