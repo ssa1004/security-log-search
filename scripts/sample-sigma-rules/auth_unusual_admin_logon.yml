@@ -1,0 +1,29 @@
+title: Admin Logon Outside Business Hours
+id: 7a4b1d6c-9e8f-4321-bc55-9d8e3a4f1c33
+status: experimental
+description: |
+  privileged user 가 평소 활동 시간대 (09-19) 외에 로그인 — 계정 탈취 또는
+  내부자 위협 가능성.
+
+  본 매퍼가 시간대 조건 (timeframe / timeofday) 은 직접 매핑하지 않으므로, import
+  결과의 mappingNotes 의 unsupported 에 "timeframe 미지원" 으로 기록되며 운영자가
+  Flink CEP 또는 ClickHouse 시간대 쿼리로 보강해야 한다.
+references:
+  - https://attack.mitre.org/techniques/T1078/
+author: security-log-search demo
+date: 2026/01/01
+tags:
+  - attack.persistence
+  - attack.t1078
+logsource:
+  category: authentication
+  product: linux
+detection:
+  selection:
+    event.outcome: success
+    user.name: root
+  timeframe: 30s
+  condition: selection
+falsepositives:
+  - 야간 batch job 또는 on-call 운영자의 정상 점검
+level: medium
