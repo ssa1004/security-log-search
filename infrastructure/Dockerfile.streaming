@@ -1,0 +1,32 @@
+# Flink job 빌드용 — 별도 jar (Spring Boot 미포함). Flink 클러스터에 submit 한다.
+
+# --- build stage ---
+FROM eclipse-temurin:21-jdk-alpine AS builder
+WORKDIR /workspace
+
+COPY gradle gradle
+COPY gradlew settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY security-domain/build.gradle.kts security-domain/
+COPY security-application/build.gradle.kts security-application/
+COPY security-adapter-in/build.gradle.kts security-adapter-in/
+COPY security-adapter-out/build.gradle.kts security-adapter-out/
+COPY security-streaming/build.gradle.kts security-streaming/
+COPY security-bootstrap/build.gradle.kts security-bootstrap/
+COPY e2e-tests/build.gradle.kts e2e-tests/
+RUN ./gradlew --no-daemon dependencies > /dev/null 2>&1 || true
+
+COPY security-domain security-domain
+COPY security-streaming security-streaming
+RUN ./gradlew --no-daemon :security-streaming:jar -x test
+
+# --- runtime stage — Flink 1.18 base image ---
+FROM flink:1.18.1-java17
+USER flink
+
+COPY --from=builder /workspace/security-streaming/build/libs/security-streaming-*.jar /opt/flink/usrlib/security-streaming.jar
+
+# 운영 시 jobmanager 가 본 jar 를 자동 로드 (usrlib).
+# job submit:
+#   flink run -c com.example.security.streaming.job.AlertCorrelationJob \
+#     /opt/flink/usrlib/security-streaming.jar \
+#     --bootstrap kafka:9092
