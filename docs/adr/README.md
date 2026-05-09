@@ -17,3 +17,5 @@
 | [0010](0010-isms-p-control-mapping.md) | ISMS-P 통제 매핑 |
 | [0011](0011-audit-log-append-only.md) | Audit log — append-only PostgreSQL + 보존 5년 |
 | [0012](0012-pii-masking-retention.md) | PII 마스킹 + 보존 정책 |
+| [0013](0013-sigma-rule-import.md) | Sigma 룰 import → AlertRule 변환 |
+| [0014](0014-source-adapter-cloudtrail-k8s.md) | source 매퍼 분리 — CloudTrail / K8s audit → ECS |
