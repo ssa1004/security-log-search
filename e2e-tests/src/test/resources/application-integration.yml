@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    # PostgreSQLContainer 가 ServiceConnection 으로 자동 wire.
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    listener:
+      auto-startup: true
+
+security:
+  opensearch:
+    enabled: false
+  clickhouse:
+    enabled: false
