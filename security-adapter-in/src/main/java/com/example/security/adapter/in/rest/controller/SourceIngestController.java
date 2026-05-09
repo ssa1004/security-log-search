@@ -1,10 +1,12 @@
 package com.example.security.adapter.in.rest.controller;
 
+import com.example.security.adapter.in.metrics.SecurityLogMetrics;
 import com.example.security.adapter.in.rest.dto.IngestResponse;
 import com.example.security.adapter.in.rest.dto.SourceIngestRequest;
 import com.example.security.application.port.in.IngestLogEventUseCase;
 import com.example.security.domain.common.TenantId;
 import com.example.security.domain.event.RawEvent;
+import com.example.security.domain.mapping.EventNormalizer;
 import com.example.security.domain.mapping.source.CloudTrailToEcsMapper;
 import com.example.security.domain.mapping.source.K8sAuditToEcsMapper;
 import jakarta.validation.Valid;
@@ -38,10 +40,13 @@ public class SourceIngestController {
 
   private final IngestLogEventUseCase useCase;
   private final Clock clock;
+  private final SecurityLogMetrics metrics;
 
-  public SourceIngestController(IngestLogEventUseCase useCase, Clock clock) {
+  public SourceIngestController(
+      IngestLogEventUseCase useCase, Clock clock, SecurityLogMetrics metrics) {
     this.useCase = useCase;
     this.clock = clock;
+    this.metrics = metrics;
   }
 
   @PostMapping("/cloudtrail")
@@ -67,8 +72,17 @@ public class SourceIngestController {
             source,
             schema,
             request.payload());
-    var result = useCase.ingest(raw, idempotencyKey);
-    var status = result.duplicate() ? HttpStatus.OK : HttpStatus.ACCEPTED;
-    return ResponseEntity.status(status).body(new IngestResponse(result.eventId(), result.duplicate()));
+    try {
+      var result = useCase.ingest(raw, idempotencyKey);
+      metrics.recordIngest(source, request.tenantId(), schema);
+      var status = result.duplicate() ? HttpStatus.OK : HttpStatus.ACCEPTED;
+      return ResponseEntity.status(status).body(new IngestResponse(result.eventId(), result.duplicate()));
+    } catch (EventNormalizer.UnsupportedSchemaException e) {
+      metrics.recordNormalizeFailure(source, schema, "unsupported_schema");
+      throw e;
+    } catch (IllegalArgumentException e) {
+      metrics.recordNormalizeFailure(source, schema, "validation_failed");
+      throw e;
+    }
   }
 }

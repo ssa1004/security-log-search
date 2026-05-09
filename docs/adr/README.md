@@ -19,3 +19,4 @@
 | [0012](0012-pii-masking-retention.md) | PII 마스킹 + 보존 정책 |
 | [0013](0013-sigma-rule-import.md) | Sigma 룰 import → AlertRule 변환 |
 | [0014](0014-source-adapter-cloudtrail-k8s.md) | source 매퍼 분리 — CloudTrail / K8s audit → ECS |
+| [0015](0015-observability-dashboards.md) | 운영 대시보드 — RED + USE 모델 기반 |

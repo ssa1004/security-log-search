@@ -13,6 +13,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.kafka:spring-kafka")
 
+    // Micrometer — controller / consumer 의 운영 메트릭 (RED 모델). 실제 PrometheusMeterRegistry
+    // 는 bootstrap 모듈에서 노출하며 본 모듈은 인터페이스 (MeterRegistry) 만 의존한다.
+    implementation("io.micrometer:micrometer-core")
+
     // OpenAPI / Swagger UI.
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
