@@ -1,0 +1,143 @@
+name: Security Log Search CI
+
+# 현재 단계에서는 push / PR trigger 를 잠시 OFF 하고 수동 trigger 만 유지합니다.
+# 자동 trigger 복원 시 아래 push / pull_request 블록 주석 해제.
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   tags: ["v*"]
+  # pull_request:
+  #   branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  security-events: write
+
+env:
+  JAVA_VERSION: "21"
+
+jobs:
+  test:
+    name: Unit + slice tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Compile
+        run: ./gradlew --no-daemon compileJava compileTestJava
+
+      - name: Run unit tests (domain + application + adapters + streaming)
+        run: |
+          ./gradlew --no-daemon \
+            :security-domain:test \
+            :security-application:test \
+            :security-adapter-out:test \
+            :security-adapter-in:test \
+            :security-streaming:test
+
+      - name: Bootstrap context test
+        run: ./gradlew --no-daemon :security-bootstrap:test
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: '**/build/reports/tests/'
+
+  integration-test:
+    name: Testcontainers IT
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: Run e2e Testcontainers
+        run: ./gradlew --no-daemon :e2e-tests:integrationTest
+
+      - name: Upload e2e reports (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports
+          path: |
+            e2e-tests/build/reports/tests/**
+            e2e-tests/build/test-results/**
+
+  build-image:
+    name: Build & push container image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [test, integration-test]
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine image tag
+        id: meta
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF#refs/tags/v}"
+          else
+            TAG="main-$(git rev-parse --short HEAD)"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infrastructure/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/security-log-search:${{ steps.meta.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+
+      - name: Build & push Flink streaming image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infrastructure/Dockerfile.streaming
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/security-log-search-streaming:${{ steps.meta.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+
+      - name: Trivy image scan (API)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/security-log-search:${{ steps.meta.outputs.tag }}
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
