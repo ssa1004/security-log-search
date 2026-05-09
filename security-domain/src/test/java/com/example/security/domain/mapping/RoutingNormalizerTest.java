@@ -34,6 +34,49 @@ class RoutingNormalizerTest {
   }
 
   @Test
+  void aws_cloudtrail_라우팅() {
+    java.util.Map<String, Object> userIdentity = new java.util.LinkedHashMap<>();
+    userIdentity.put("type", "IAMUser");
+    userIdentity.put("userName", "Alice");
+    java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+    payload.put("eventTime", "2026-05-09T12:00:00Z");
+    payload.put("eventSource", "signin.amazonaws.com");
+    payload.put("eventName", "ConsoleLogin");
+    payload.put("awsRegion", "us-east-1");
+    payload.put("sourceIPAddress", "10.0.0.1");
+    payload.put("userIdentity", userIdentity);
+    payload.put("eventID", "11111111-2222-3333-4444-555555555555");
+    var raw =
+        new RawEvent(
+            TenantId.of("acme"),
+            Instant.parse("2026-05-09T12:00:00Z"),
+            "aws",
+            "aws-cloudtrail",
+            payload);
+    assertThat(router.normalize(raw).eventCategory()).isEqualTo("authentication");
+  }
+
+  @Test
+  void k8s_audit_라우팅() {
+    java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+    payload.put("auditID", "11111111-2222-3333-4444-555555555555");
+    payload.put("verb", "create");
+    payload.put("user", Map.of("username", "alice"));
+    payload.put("sourceIPs", java.util.List.of("10.0.0.1"));
+    payload.put("objectRef", Map.of("resource", "pods", "namespace", "default"));
+    payload.put("responseStatus", Map.of("code", 201));
+    payload.put("requestReceivedTimestamp", "2026-05-09T12:00:00Z");
+    var raw =
+        new RawEvent(
+            TenantId.of("acme"),
+            Instant.parse("2026-05-09T12:00:00Z"),
+            "k8s",
+            "k8s-audit",
+            payload);
+    assertThat(router.normalize(raw).eventCategory()).isEqualTo("configuration");
+  }
+
+  @Test
   void schema_대소문자_무관() {
     var raw =
         new RawEvent(
