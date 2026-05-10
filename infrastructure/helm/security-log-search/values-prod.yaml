@@ -1,4 +1,6 @@
-replicaCount: 5
+# prod override — replicas 3 / HPA 활성 (cpu 70%, min 2 max 10) / ingress TLS / NetworkPolicy 활성.
+
+replicaCount: 3
 
 resources:
   requests:
@@ -9,26 +11,55 @@ resources:
     memory: 4Gi
 
 autoscaling:
-  minReplicas: 5
-  maxReplicas: 24
-  targetCpuUtilization: 65
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCpuUtilization: 70
+  targetMemoryUtilization: 75
 
 podDisruptionBudget:
-  minAvailable: 3
+  enabled: true
+  minAvailable: 2
 
 ingress:
   enabled: true
   className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
   hosts:
     - host: security-log.example.com
       paths:
-        - path: /
+        - path: /api/v1/events
+          pathType: Prefix
+        - path: /api/v1/search
+          pathType: Prefix
+        - path: /api/v1/alerts
+          pathType: Prefix
+        - path: /api/v1/sigma-rules
+          pathType: Prefix
+        - path: /api/v1/audit
+          pathType: Prefix
+        - path: /api/v1/stats
           pathType: Prefix
   tls:
     - secretName: security-log-tls
       hosts: [security-log.example.com]
+  # admin 은 별도 host + IP allowlist — 운영자 office VPN 만.
+  admin:
+    enabled: true
+    host: security-log-admin.example.com
+    path: /api/v1/admin
+    pathType: Prefix
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8"
+    tls:
+      - secretName: security-log-admin-tls
+        hosts: [security-log-admin.example.com]
+
+networkPolicy:
+  enabled: true
 
 streaming:
   parallelism: 8
