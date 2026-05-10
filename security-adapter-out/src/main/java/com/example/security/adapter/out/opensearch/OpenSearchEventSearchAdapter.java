@@ -42,16 +42,54 @@ import org.springframework.stereotype.Component;
  *   <li>인덱스 패턴은 read alias {@code events-{tenant}-read} — alias 가 그 tenant 인덱스만 가리킴
  *   <li>BoolQuery 의 filter 에 tenant.keyword=tenantId 강제 추가 — 사용자가 우회 불가
  *   <li>Resilience4j circuit breaker / retry / bulkhead 로 OpenSearch 장애 격리
+ *   <li>termFilters / facet 의 field 이름은 {@link #ALLOWED_TERM_FIELDS} 화이트리스트로 검증 —
+ *       사용자가 인덱스의 임의 필드 (내부 control 필드, 다른 tenant 인덱스의 _id 등) 를 지목
+ *       할 수 없게 차단
  * </ul>
  */
 @Component
 @ConditionalOnProperty(name = "security.opensearch.enabled", havingValue = "true", matchIfMissing = false)
 public class OpenSearchEventSearchAdapter implements EventSearchPort {
 
+  /**
+   * termFilters / facet 으로 사용자에게 노출 가능한 ECS 필드.
+   *
+   * <p>OpenSearchIndexAdminAdapter 의 인덱스 템플릿에서 mapping 된 keyword 필드만 포함.
+   * 화이트리스트가 아니면 OpenSearch 가 해당 필드 mapping 이 없을 때 ignore_unmapped 가
+   * false 인 경우 query 가 실패할 수 있고, 외부에서 임의 필드 (예: tenant_id 자체를 또 비교
+   * 하여 의도치 않은 결과) 를 끼워 넣는 표면을 차단한다.
+   */
+  static final java.util.Set<String> ALLOWED_TERM_FIELDS =
+      java.util.Set.of(
+          "event_kind",
+          "event_category",
+          "event_type",
+          "event_action",
+          "event_outcome",
+          "severity",
+          "source_ip",
+          "destination_ip",
+          "user_name",
+          "host_name",
+          "host_os");
+
   private final OpenSearchClient client;
 
   public OpenSearchEventSearchAdapter(OpenSearchClient client) {
     this.client = client;
+  }
+
+  /**
+   * 사용자 노출용 field 이름 검증. 화이트리스트에 없으면 IllegalArgumentException.
+   *
+   * <p>{@code tenant_id}, {@code _id}, {@code _index} 등의 내부 / 격리 필드, 그리고 mapping
+   * 안 된 임의 필드 ({@code admin_only} 등) 가 사용자 입력으로 들어오는 것을 차단.
+   */
+  static String requireAllowedField(String field) {
+    if (field == null || !ALLOWED_TERM_FIELDS.contains(field)) {
+      throw new IllegalArgumentException("허용되지 않는 검색 필드: " + field);
+    }
+    return field;
   }
 
   @Override
@@ -76,8 +114,11 @@ public class OpenSearchEventSearchAdapter implements EventSearchPort {
       bool.must(Query.of(q -> q.queryString(qs -> qs.query(query.luceneQueryString()))));
     }
 
-    // (3) term filters.
-    query.termFilters().forEach((field, value) -> bool.filter(termFilter(field, value)));
+    // (3) term filters — field 이름은 화이트리스트로 검증.
+    query
+        .termFilters()
+        .forEach(
+            (field, value) -> bool.filter(termFilter(requireAllowedField(field), value)));
 
     // (4) 시간 범위.
     if (query.from() != null || query.to() != null) {
@@ -96,14 +137,15 @@ public class OpenSearchEventSearchAdapter implements EventSearchPort {
             .sort(s -> s.field(f -> f.field("@timestamp").order(SortOrder.Desc)))
             .sort(s -> s.field(f -> f.field("event_id.keyword").order(SortOrder.Desc)));
 
-    // (5) facet (terms aggregation).
+    // (5) facet (terms aggregation) — field 이름은 화이트리스트로 검증.
     Map<String, Aggregation> aggs = new HashMap<>();
     if (query.facetSize() > 0) {
       for (var facet : query.facets()) {
+        var safeFacet = requireAllowedField(facet);
         aggs.put(
-            facet,
+            safeFacet,
             Aggregation.of(
-                a -> a.terms(t -> t.field(facet + ".keyword").size(query.facetSize()))));
+                a -> a.terms(t -> t.field(safeFacet + ".keyword").size(query.facetSize()))));
       }
     }
     if (!aggs.isEmpty()) {
