@@ -37,3 +37,5 @@ notes.md
 .env.local
 *.pem
 *.key
+# 통합 시연용 mock auth-service 의 *테스트 전용* 키쌍은 예외 — 운영 키 아님.
+!infrastructure/docker/mock-auth/private-key.pem
