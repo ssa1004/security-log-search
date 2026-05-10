@@ -49,7 +49,7 @@ sequenceDiagram
 ```mermaid
 graph LR
     domain["security-domain<br/>LogEvent (ECS) + AlertRule + Tenant + AuditEntry"]
-    app["security-application<br/>9 use case + port"]
+    app["security-application<br/>11 use case + port"]
     in["security-adapter-in<br/>REST + Kafka consumer"]
     out["security-adapter-out<br/>JPA + Kafka producer + OpenSearch + ClickHouse"]
     streaming["security-streaming<br/>Flink job (별도 jar, Spring 미포함)"]
@@ -67,14 +67,14 @@ graph LR
 | 모듈 | 책임 |
 |---|---|
 | `security-domain` | LogEvent (ECS), OCSF mapper, AlertRule, Tenant, AuditEntry, Severity 등 외부 의존성 0 도메인 모델 |
-| `security-application` | 9개 use case + in / out port 정의 |
+| `security-application` | 11개 use case + in / out port 정의 |
 | `security-adapter-out` | JPA control plane (tenants / alert_rules / alerts / audit_entries), Kafka producer (events.normalized + alerts.fired), OpenSearch Java client, ClickHouse JDBC |
 | `security-adapter-in` | REST API (ingest / search / stats / alert-rules / alerts / admin / audit / tenants), Kafka consumer (alerts.fired) |
 | `security-streaming` | Apache Flink job — KeyedProcessFunction + MapState + broadcast state 로 룰 평가, Kafka source / sink |
 | `security-bootstrap` | Spring Boot main, application.yml (profile dev / prod), Flyway 마이그레이션, OpenSearch / ClickHouse 초기 스키마 적용 |
 | `e2e-tests` | Testcontainers (Postgres + Kafka + OpenSearch + ClickHouse) 기반 통합 시나리오 |
 
-## 9개 use case
+## 11개 use case
 
 1. **`IngestLogEventUseCase`** — `POST /api/v1/events` — raw → ECS / OCSF 정규화 → Kafka publish.
    Idempotency-Key 헤더로 중복 방지 (Postgres `idempotency_keys` 테이블).
@@ -92,6 +92,10 @@ graph LR
    변경 / 알람 처리 했는지 audit.
 9. **`OnboardTenantUseCase`** — `POST /api/v1/tenants` — 신규 tenant 등록 시 OpenSearch alias
    자동 생성 + ClickHouse Row Policy 자동 wiring.
+10. **`ImportSigmaRuleUseCase`** — `POST /api/v1/sigma-rules` — SigmaHQ YAML (단일 / multi-document) →
+    `AlertRule` 변환 + 미지원 변환 한계 (`mappingNotes`) 반환 (ADR-0013).
+11. **`ListImportedSigmaRulesUseCase`** — `GET /api/v1/sigma-rules` — import 한 Sigma 원본 / 변환 결과
+    조회. import 한 룰의 stale 검토용.
 
 ## 멀티테넌트 격리 — 4 layer
 
