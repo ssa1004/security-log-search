@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "security-log-search.configMapName" . }}
+  labels:
+    {{- include "security-log-search.labels" . | nindent 4 }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.config.springProfile | quote }}
+  KAFKA_BOOTSTRAP: {{ .Values.config.kafka.bootstrap | quote }}
+  OPENSEARCH_HOST: {{ .Values.config.opensearch.host | quote }}
+  OPENSEARCH_PORT: {{ .Values.config.opensearch.port | quote }}
+  OPENSEARCH_SCHEME: {{ .Values.config.opensearch.scheme | quote }}
+  CLICKHOUSE_URL: {{ .Values.config.clickhouse.url | quote }}
+  CLICKHOUSE_USER: {{ .Values.config.clickhouse.user | quote }}
+  OAUTH_ISSUER_URI: {{ .Values.config.oauth.issuerUri | quote }}
+  DB_HOST: {{ .Values.config.postgres.host | quote }}
+  DB_PORT: {{ .Values.config.postgres.port | quote }}
+  DB_NAME: {{ .Values.config.postgres.name | quote }}
+  DB_USER: {{ .Values.config.postgres.user | quote }}
+  REDIS_HOST: {{ .Values.config.redis.host | quote }}
+  REDIS_PORT: {{ .Values.config.redis.port | quote }}
+  REDIS_DATABASE: {{ .Values.config.redis.database | quote }}
+  {{- if .Values.gracefulShutdown.enabled }}
+  SERVER_SHUTDOWN: "graceful"
+  SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: {{ printf "%ds" (int .Values.gracefulShutdown.springTimeoutSeconds) | quote }}
+  {{- end }}

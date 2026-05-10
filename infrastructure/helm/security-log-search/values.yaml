@@ -14,6 +14,14 @@ streaming:
 
 replicaCount: 3
 
+# graceful shutdown — Spring Boot 의 server.shutdown=graceful + Kafka consumer drain 시간.
+# preStop sleep 은 endpoint propagation 지연 (ingress 가 pod 빠지기 전 트래픽 끊는 시간) 보전용.
+gracefulShutdown:
+  enabled: true
+  preStopSleepSeconds: 15
+  terminationGracePeriodSeconds: 60
+  springTimeoutSeconds: 30
+
 resources:
   requests:
     cpu: 500m
@@ -23,7 +31,7 @@ resources:
     memory: 2Gi
 
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 3
   maxReplicas: 12
   targetCpuUtilization: 70
@@ -33,10 +41,29 @@ podDisruptionBudget:
   enabled: true
   minAvailable: 2
 
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  # RBAC — ISMS-P 2.5 (사용자 식별 / 인증) 관점에서 ServiceAccount 별 최소 권한.
+  # 본 앱은 자기 namespace 의 configmap / secret 을 read 하는 정도 (런타임 hot reload).
+  rbac:
+    create: true
+    rules:
+      - apiGroups: [""]
+        resources: ["configmaps", "secrets"]
+        verbs: ["get", "list", "watch"]
+
 service:
   type: ClusterIP
   port: 80
 
+# SIEM 특성상 일반 사용자 API 와 admin API 는 path / host 분리.
+# - /api/v1/events       — ingest (수집 source)
+# - /api/v1/search       — 운영자 검색
+# - /api/v1/alerts       — 운영자 알람 조회 / ack
+# - /api/v1/sigma-rules  — Sigma 룰 import
+# - /api/v1/admin/*      — admin (인덱스 / 룰 관리), 별도 host 권장
 ingress:
   enabled: false
   className: nginx
@@ -44,19 +71,39 @@ ingress:
   hosts:
     - host: security-log.example.com
       paths:
-        - path: /
+        - path: /api/v1/events
+          pathType: Prefix
+        - path: /api/v1/search
+          pathType: Prefix
+        - path: /api/v1/alerts
+          pathType: Prefix
+        - path: /api/v1/sigma-rules
+          pathType: Prefix
+        - path: /api/v1/audit
+          pathType: Prefix
+        - path: /api/v1/stats
           pathType: Prefix
   tls: []
+  # admin endpoint 분리 (운영자만 접근 — IP allowlist annotation 추가 권장).
+  admin:
+    enabled: false
+    host: security-log-admin.example.com
+    path: /api/v1/admin
+    pathType: Prefix
+    annotations: {}
+    tls: []
 
 config:
   springProfile: prod
   kafka:
     bootstrap: kafka.kafka.svc.cluster.local:9092
   opensearch:
+    # 외부 클러스터 가정 — endpoint 만 주입.
     host: opensearch.opensearch.svc.cluster.local
     port: 9200
     scheme: http
   clickhouse:
+    # 외부 클러스터 가정 — JDBC URL 만 주입.
     url: jdbc:clickhouse://clickhouse.clickhouse.svc.cluster.local:8123/default
     user: default
   oauth:
@@ -66,11 +113,21 @@ config:
     port: 5432
     name: security
     user: security
+  redis:
+    # idempotency-key cache + rate limiter 용. Sentinel / Cluster 모드면 url 직접 지정.
+    host: redis.redis.svc.cluster.local
+    port: 6379
+    database: 0
 
-# Secret values — 실 운영에서는 Sealed Secret / External Secret 으로 주입.
+# Secret values — 운영에서는 SealedSecret / ExternalSecret / CSI Secret Store 로 대체.
+# 본 chart 의 secret template 은 dev / staging 편의용 placeholder.
 secrets:
+  # 외부 secret 을 이미 만들어 둔 경우 existingSecret 을 지정하면 본 chart 의 secret 을
+  # 만들지 않고 그쪽 secretKeyRef 만 사용.
+  existingSecret: ""
   dbPassword: change-me
   clickHousePassword: change-me
+  redisPassword: ""
 
 monitoring:
   serviceMonitor:
@@ -78,5 +135,26 @@ monitoring:
     interval: 30s
     scrapeTimeout: 10s
 
+# ISMS-P 관점: prod 는 기본 활성. dev / staging 은 values-dev.yaml 에서 false override.
 networkPolicy:
   enabled: true
+  # 외부 namespace label 매핑 — 클러스터마다 다를 수 있어서 values 로 노출.
+  ingressNamespaces:
+    - ingress-nginx
+    - monitoring
+  egress:
+    postgres:
+      namespace: postgres
+      port: 5432
+    kafka:
+      namespace: kafka
+      port: 9092
+    opensearch:
+      namespace: opensearch
+      port: 9200
+    clickhouse:
+      namespace: clickhouse
+      port: 8123
+    redis:
+      namespace: redis
+      port: 6379
