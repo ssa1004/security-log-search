@@ -22,6 +22,8 @@ import org.springframework.stereotype.Component;
  *   <li>{@code security_log_search_latency_seconds{tenant, type}} — histogram, 검색 지연 (type ∈
  *       {opensearch, clickhouse})
  *   <li>{@code security_log_alert_fired_total{rule_id, severity, tenant}} — counter, 알람 발생
+ *   <li>{@code security_log_alert_duplicate_total{tenant}} — counter, alerts.fired 중복 메시지
+ *       (Flink at-least-once 로 같은 alertId 재도착 → 멱등 차단된 횟수)
  * </ul>
  *
  * <p>본 컴포넌트는 동적으로 tag 조합을 생성하므로 cardinality 가 무한이 되지 않도록 주의한다.
@@ -41,6 +43,9 @@ public class SecurityLogMetrics {
 
   /** 알람 발생 counter 이름. */
   public static final String ALERT_FIRED_TOTAL = "security_log_alert_fired_total";
+
+  /** alerts.fired 중복 차단 counter 이름. */
+  public static final String ALERT_DUPLICATE_TOTAL = "security_log_alert_duplicate_total";
 
   private final MeterRegistry registry;
 
@@ -84,6 +89,15 @@ public class SecurityLogMetrics {
         .description("알람 발생 개수")
         .tag("rule_id", safeTag(ruleId))
         .tag("severity", safeTag(severity))
+        .tag("tenant", safeTag(tenant))
+        .register(registry)
+        .increment();
+  }
+
+  /** alerts.fired 중복 alertId 차단 횟수 — at-least-once delivery 의 운영 가시성. */
+  public void recordAlertDuplicate(String tenant) {
+    Counter.builder(ALERT_DUPLICATE_TOTAL)
+        .description("alerts.fired 중복 alertId 차단 횟수 (at-least-once 재전송)")
         .tag("tenant", safeTag(tenant))
         .register(registry)
         .increment();

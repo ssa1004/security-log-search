@@ -2,6 +2,7 @@ package com.example.security.adapter.in.kafka;
 
 import com.example.security.adapter.in.metrics.SecurityLogMetrics;
 import com.example.security.application.port.in.EvaluateAlertUseCase;
+import com.example.security.application.port.out.IdempotencyPort;
 import com.example.security.domain.common.Severity;
 import com.example.security.domain.common.TenantId;
 import com.example.security.domain.rule.Alert;
@@ -28,18 +29,32 @@ import org.springframework.stereotype.Component;
  *
  * <p>Spring Kafka consumer 의 backpressure 튜닝은 application.yml 의
  * {@code spring.kafka.consumer.max-poll-records} 로 조절. (ADR-0009)
+ *
+ * <p>at-least-once 중복 차단: Flink Kafka sink 의 delivery guarantee 가 {@code AT_LEAST_ONCE}
+ * 이므로 같은 alertId 가 두 번 이상 도착할 수 있다. {@link IdempotencyPort} 로 alertId 를
+ * tenant-scoped 키로 claim 하여 중복 처리 시 use case / notification / audit 가 두 번 실행되는
+ * 것을 차단한다. 미스 시 (이미 본 alertId) 메트릭만 기록하고 정상 ack.
  */
 @Component
 public class AlertFiredConsumer {
 
   private static final Logger log = LoggerFactory.getLogger(AlertFiredConsumer.class);
 
+  /** {@link IdempotencyPort} 키 prefix — 다른 use case 의 키와 충돌 방지. */
+  static final String IDEMPOTENCY_KEY_PREFIX = "alerts.fired:";
+
   private final EvaluateAlertUseCase useCase;
+  private final IdempotencyPort idempotency;
   private final ObjectMapper json;
   private final SecurityLogMetrics metrics;
 
-  public AlertFiredConsumer(EvaluateAlertUseCase useCase, ObjectMapper json, SecurityLogMetrics metrics) {
+  public AlertFiredConsumer(
+      EvaluateAlertUseCase useCase,
+      IdempotencyPort idempotency,
+      ObjectMapper json,
+      SecurityLogMetrics metrics) {
     this.useCase = useCase;
+    this.idempotency = idempotency;
     this.json = json;
     this.metrics = metrics;
   }
@@ -54,6 +69,19 @@ public class AlertFiredConsumer {
       @Header(KafkaHeaders.OFFSET) long offset) {
     try {
       var alert = parseAlert(payload);
+      var key = IDEMPOTENCY_KEY_PREFIX + alert.alertId();
+      var claimed = idempotency.tryClaim(alert.tenantId(), key, alert.alertId());
+      if (!claimed) {
+        // 같은 alertId 가 이전에 처리됨 — handleFired / notification / audit 두 번 실행되지
+        // 않도록 silent skip. 메트릭으로만 발생량 노출.
+        log.info(
+            "alerts.fired 중복 alertId 스킵: alertId={} partition={} offset={}",
+            alert.alertId(),
+            partition,
+            offset);
+        metrics.recordAlertDuplicate(alert.tenantId().value());
+        return;
+      }
       useCase.handleFired(alert);
       metrics.recordAlertFired(alert.ruleId().toString(), alert.severity().name(), alert.tenantId().value());
     } catch (RuntimeException e) {
