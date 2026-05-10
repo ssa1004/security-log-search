@@ -23,5 +23,6 @@ monitoring:
   serviceMonitor:
     enabled: false
 
+# dev 는 NetworkPolicy off — 로컬 디버깅 시 다른 namespace 에서 curl 가능하게.
 networkPolicy:
   enabled: false

@@ -1,4 +1,5 @@
 {{- if .Values.ingress.enabled -}}
+# 사용자 / source 용 ingress — SIEM 의 ingest / search / alerts / sigma-rules / audit / stats path.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -30,4 +31,36 @@ spec:
                   number: {{ $.Values.service.port }}
           {{- end }}
     {{- end }}
+{{- if .Values.ingress.admin.enabled }}
+---
+# admin 전용 ingress — 운영자만 접근 (IP allowlist annotation 권장, prod 에서 적용).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "security-log-search.fullname" . }}-admin
+  labels:
+    {{- include "security-log-search.labels" . | nindent 4 }}
+    app.kubernetes.io/component: admin
+  {{- with .Values.ingress.admin.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- with .Values.ingress.admin.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.admin.host | quote }}
+      http:
+        paths:
+          - path: {{ .Values.ingress.admin.path }}
+            pathType: {{ .Values.ingress.admin.pathType }}
+            backend:
+              service:
+                name: {{ include "security-log-search.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+{{- end }}
 {{- end }}
