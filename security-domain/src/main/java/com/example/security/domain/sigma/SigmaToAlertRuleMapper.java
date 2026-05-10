@@ -58,7 +58,7 @@ public class SigmaToAlertRuleMapper {
     var unsupported = new java.util.ArrayList<String>();
 
     var category = mapCategory(sigma.logsource(), unsupported);
-    var selection = primarySelection(sigma.detection(), unsupported);
+    var selection = primarySelection(sigma.detection(), sigma.condition(), unsupported);
 
     String filterAction = null;
     String filterOutcome = null;
@@ -101,6 +101,16 @@ public class SigmaToAlertRuleMapper {
       unsupported.add("timeframe 직접 매핑 미지원 — defaultWindow 로 대체");
     }
 
+    // multi-selection 검출 — condition 이 detection 의 selection 키를 2개 이상 참조하면
+    // primarySelection 이 첫 selection 만 사용하므로 다른 selection 의 매칭이 silent skip 된다.
+    // 이 경우 false negative 가 되므로 unsupported 기록 + 룰은 disabled 로 import 된다.
+    var referenced = referencedSelectionKeys(condition, sigma.detection().keySet());
+    if (referenced.size() > 1) {
+      unsupported.add(
+          "condition 이 다중 selection 참조 — 첫 selection 만 매핑되어 나머지는 silent skip"
+              + ": " + condition + " (" + referenced + ")");
+    }
+
     var rule =
         new AlertRule(
             UUID.randomUUID(),
@@ -138,9 +148,22 @@ public class SigmaToAlertRuleMapper {
 
   @SuppressWarnings("unchecked")
   private static Map<String, Object> primarySelection(
-      Map<String, Object> detection, java.util.List<String> unsupported) {
+      Map<String, Object> detection, String condition, java.util.List<String> unsupported) {
     // Sigma 의 detection 안에는 condition + 1개 이상의 selection 키가 있다.
-    // 본 매퍼는 첫 selection-like 맵을 1차 매칭 셀로 사용한다.
+    // condition 이 정확히 1개 selection 만 참조하면 그 selection 을 결정성 있게 선택,
+    // 그렇지 않으면 (참조 0개 / 다중 / unparseable) 첫 Map 엔트리로 fallback.
+    var referenced = referencedSelectionKeys(condition, detection.keySet());
+    String preferredKey = referenced.size() == 1 ? referenced.iterator().next() : null;
+
+    if (preferredKey != null) {
+      var v = detection.get(preferredKey);
+      if (v instanceof Map<?, ?> m) {
+        return (Map<String, Object>) m;
+      }
+      if (v instanceof java.util.List<?>) {
+        unsupported.add("list 형태 selection 미지원: " + preferredKey);
+      }
+    }
     for (var entry : detection.entrySet()) {
       if ("condition".equals(entry.getKey()) || "timeframe".equals(entry.getKey())) continue;
       if (entry.getValue() instanceof Map<?, ?> m) {
@@ -180,6 +203,31 @@ public class SigmaToAlertRuleMapper {
     if (c.contains("|")) return false; // pipe — aggregation
     if (c.contains(" of ")) return false; // 1 of selection*
     return true;
+  }
+
+  /**
+   * condition 문자열이 참조하는 detection key (selection / filter 등) 의 집합 추출.
+   *
+   * <p>Sigma 의 condition 은 식별자 + AND/OR/NOT/괄호로 구성된다. 본 메서드는 condition 안의
+   * 식별자 토큰 중 detection 의 키와 일치하는 것만 모은다 — 와일드카드 ({@code selection*})
+   * 같은 표현은 무시 (이미 isSimpleCondition 이 " of " 로 차단).
+   */
+  static java.util.Set<String> referencedSelectionKeys(
+      String condition, java.util.Set<String> detectionKeys) {
+    if (condition == null || condition.isBlank()) return java.util.Set.of();
+    var tokens = condition.toLowerCase(Locale.ROOT).split("[^a-z0-9_]+");
+    var result = new java.util.LinkedHashSet<String>();
+    for (var key : detectionKeys) {
+      if ("condition".equals(key) || "timeframe".equals(key)) continue;
+      var lower = key.toLowerCase(Locale.ROOT);
+      for (var t : tokens) {
+        if (t.equals(lower)) {
+          result.add(key);
+          break;
+        }
+      }
+    }
+    return result;
   }
 
   static boolean containsAggregation(String condition) {
