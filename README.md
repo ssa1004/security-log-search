@@ -269,6 +269,101 @@ ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매
 - Flink Kubernetes Operator (apache/flink-kubernetes-operator) 로 streaming job 관리
 - Flink 1.19+ 업그레이드 — `LocalExecutionEnvironment` 통합 테스트 복귀 (record 직렬화 이슈 해결됨)
 
+## Portfolio Set 통합
+
+본 repo 는 단독으로도 동작하지만, 다음 8개 repo 가 한 시스템처럼 맞물리는 portfolio set 의
+한 축입니다. 프로필 README — <https://github.com/ssa1004/ssa1004> — 에 전체 그림이 있습니다.
+
+| repo | 역할 | 본 repo 와의 관계 |
+|---|---|---|
+| [auth-service](https://github.com/ssa1004/auth-service) | OIDC / JWT 발급, JWK Set 노출 | 들어오는 요청의 JWT 를 본 repo 가 검증 (issuer-uri / JWK Set) |
+| [notification-hub](https://github.com/ssa1004/notification-hub) | 멀티채널 알림 (이메일 / SMS / push / Slack) | 본 repo 의 `alerts.fired` Kafka topic 을 consume → 운영자에게 fan-out. 반대로 hub 의 발송 결과 (`notification.delivered`) 는 본 repo 가 audit 용으로 수집 |
+| [search-service](https://github.com/ssa1004/search-service) | 일반 도메인 검색 (상품 / 문서) | 본 repo 와 별도 — search-service 의 audit log 는 본 repo 가 수집 |
+| [billing-platform](https://github.com/ssa1004/billing-platform) | 결제 / 정산 도메인 | billing 의 application audit log 를 본 repo 가 수집 |
+| [resell-orderbook](https://github.com/ssa1004/resell-orderbook) | 리셀 주문장 | 매칭 엔진의 app log 를 본 repo 가 수집 |
+| [gpu-job-orchestrator](https://github.com/ssa1004/gpu-job-orchestrator) | GPU 학습 job 스케줄링 | K8s audit log 를 본 repo 가 ECS 매핑 후 수집 (ADR-0014) |
+| [mini-shop-observability](https://github.com/ssa1004/mini-shop-observability) | OTel / Prometheus / Loki 플레이그라운드 | observability stack 공통 — 본 repo 의 Grafana dashboard 가 같은 패턴 |
+| **security-log-search** | 본 repo — SIEM 수집 / 검색 / 알람 | — |
+
+본 repo 의 통합점은 세 방향:
+
+1. **들어오는 인증** — auth-service 의 JWK Set 으로 JWT 검증. claim 의 `tenant_id` 가
+   query rewrite 의 1차 격리 keying 이 됨.
+2. **나가는 alert** — Sigma rule 매칭 또는 threshold rule 평가가 성공하면 Flink job 이
+   `alerts.fired` Kafka topic 에 publish. notification-hub 가 consume 해서 운영자에게
+   채널별 발송.
+3. **들어오는 audit** — 다른 portfolio service 의 application log / K8s audit / CloudTrail
+   raw event 를 ingest API 로 받음. notification-hub 의 발송 결과도 보안 이벤트로 수집해서
+   알림 누락 / 실패 추세를 운영자가 검색 가능.
+
+### Cross-repo sequence — JWT 검증 + 검색
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Caller as 다른 service<br/>(billing / search / ...)
+    participant Auth as auth-service
+    participant API as security-log-search<br/>(REST API)
+    participant Sec as SecurityFilterChain
+    participant Svc as SearchService
+    participant OS as OpenSearch
+    participant CH as ClickHouse
+
+    Caller->>Auth: POST /oauth2/token (client_credentials)
+    Auth-->>Caller: access_token (tenant_id claim 포함)
+    Caller->>API: POST /api/v1/search + Bearer JWT
+    API->>Sec: JWT 검증 (auth-service JWK Set)
+    Sec->>Sec: claim.tenant_id 추출
+    Sec->>Svc: OperatorContext(tenant=acme) 주입
+    Svc->>Svc: query rewrite — q AND tenantId:acme
+    par OpenSearch
+        Svc->>OS: GET events-acme-read/_search
+    and ClickHouse
+        Svc->>CH: SET tenant_id='acme'; SELECT ...
+    end
+    Svc-->>API: hits + facets
+    API-->>Caller: 200 OK (다른 tenant 데이터 0건 보장)
+```
+
+### Cross-repo sequence — Sigma 매칭 → alert → notification-hub
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Src as 수집 source
+    participant API as security-log-search<br/>ingest API
+    participant K as Kafka<br/>events.normalized / alerts.fired
+    participant Flink as Flink correlation job
+    participant Hub as notification-hub<br/>(consumer)
+    participant Op as 운영자
+
+    Src->>API: POST /api/v1/events (raw)
+    API->>K: publish events.normalized
+    K-->>Flink: source
+    Flink->>Flink: Sigma 변환 룰 + threshold 평가<br/>(KeyedProcessFunction + MapState)
+    Flink->>K: publish alerts.fired
+    par 본 repo consumer
+        K-->>API: INSERT alerts row + audit_entries
+    and 외부 consumer
+        K-->>Hub: alerts.fired consume
+        Hub->>Op: 채널별 발송 (이메일 / Slack / SMS)
+        Hub->>K: notification.delivered (결과)
+        K-->>API: ingest 로 다시 수집 → audit
+    end
+```
+
+### 통합 시연 (mock)
+
+전체 portfolio 를 다 띄울 필요 없이, **mock auth-service + mock notification-hub** 로
+본 repo 의 통합점을 한 호스트에서 검증:
+
+```bash
+docker compose -f infrastructure/docker/docker-compose.integration.yml up -d
+./scripts/integration-demo.sh
+```
+
+자세한 절차와 검증 포인트는 [scripts/integration-demo.sh](scripts/integration-demo.sh) 의 헤더 주석.
+
 ## 수동 GitHub push
 
 `gh` CLI 가 없는 환경이면 다음으로 push.
