@@ -225,6 +225,72 @@ class SigmaToAlertRuleMapperTest {
   }
 
   @Test
+  void condition_이_다중_selection_참조시_unsupported_기록_disabled() {
+    // Sigma 룰의 condition 이 "selection_a or selection_b" 같이 두 selection 을 참조하면
+    // 매퍼는 첫 selection 만 평가하므로 selection_b 의 매칭이 silent skip 된다 (false negative).
+    // 이 경우 unsupported 에 기록 + 룰은 disabled 로 import 되어 운영자 검토를 강제한다.
+    var sigma =
+        new SigmaRule(
+            "multi-1",
+            "Multi selection rule",
+            "selection_a or selection_b",
+            "test",
+            "high",
+            null,
+            List.of(),
+            List.of(),
+            List.of(),
+            Map.of("category", "authentication"),
+            Map.of(
+                "selection_a",
+                Map.of("EventID", 4625),
+                "selection_b",
+                Map.of("EventID", 4648),
+                "condition",
+                "selection_a or selection_b"),
+            List.of(),
+            "raw",
+            now);
+    var result = mapper.map(sigma, tenantId, now);
+
+    assertThat(result.unsupported())
+        .anySatisfy(s -> assertThat(s).contains("다중 selection 참조"));
+    assertThat(result.rule().enabled()).isFalse();
+  }
+
+  @Test
+  void condition_이_단일_selection_참조시_그_selection_이_결정성_있게_선택된다() {
+    // detection 에 selection 과 filter 가 둘 다 있어도, condition 이 selection 만 참조하면
+    // selection 이 선택되고 filter 는 무시 (단일 참조이므로 silent skip 위험 X).
+    var sigma =
+        new SigmaRule(
+            "single-ref-1",
+            "Single ref rule",
+            null,
+            "test",
+            "medium",
+            null,
+            List.of(),
+            List.of(),
+            List.of(),
+            Map.of("category", "authentication"),
+            Map.of(
+                "filter",
+                Map.of("EventID", 4624), // success — condition 은 안 봄
+                "selection",
+                Map.of("EventID", 4625), // failure
+                "condition",
+                "selection"),
+            List.of(),
+            "raw",
+            now);
+    var result = mapper.map(sigma, tenantId, now);
+
+    // 단일 참조 ⇒ multi-selection unsupported 메시지 없어야.
+    assertThat(result.unsupported()).noneMatch(s -> s.contains("다중 selection 참조"));
+  }
+
+  @Test
   void description_에_sigma_id_와_refs_포함() {
     var sigma =
         new SigmaRule(
