@@ -253,9 +253,50 @@ ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매
 - [`flink-job-not-progressing.md`](docs/runbook/flink-job-not-progressing.md) — Flink correlation job lag 누적 / checkpoint 실패
 - [`alert-storm.md`](docs/runbook/alert-storm.md) — 알람 발화 폭주 (실제 사고 vs false positive 판정 / 룰 mute 절차)
 
-## GitOps / 배포
+## Deployment
 
-- `infrastructure/helm/security-log-search/` — Helm chart (env 별 `values-{env}.yaml`)
+### Helm chart
+
+운영 / 스테이징 배포는 `infrastructure/helm/security-log-search/` 의 Helm chart 로 합니다
+(Helm 3.x). env 별 override 는 `values-dev.yaml` / `values-staging.yaml` / `values-prod.yaml`.
+
+```bash
+cd infrastructure/helm/security-log-search
+
+# dev — replica 1, NetworkPolicy / HPA / Ingress 비활성
+helm install slq . --namespace security-log-search --create-namespace \
+  --values values-dev.yaml
+
+# prod — replica 3, HPA (cpu 70%, min 2 max 10), Ingress TLS, NetworkPolicy 활성
+helm install slq . --namespace security-log-search --create-namespace \
+  --values values-prod.yaml
+```
+
+chart 가 만드는 리소스:
+
+- Deployment (graceful shutdown — preStop sleep + Spring `server.shutdown=graceful`)
+- Service (ClusterIP)
+- ConfigMap (non-secret env) + Secret (placeholder, 운영은 SealedSecret / ExternalSecret 권장)
+- ServiceAccount + Role + RoleBinding (configmap / secret read 만 — ISMS-P 최소 권한)
+- HPA (prod) / PodDisruptionBudget
+- Ingress 사용자용 (`/api/v1/{events,search,alerts,sigma-rules,audit,stats}`) +
+  admin 별도 host (`/api/v1/admin`, IP allowlist)
+- NetworkPolicy (postgres / kafka / opensearch / clickhouse / redis egress 만 허용)
+- ServiceMonitor (Prometheus Operator)
+
+자세한 키 / env 별 차이 / SIEM 특성 (멀티테넌트 / admin 분리 / 외부 cluster 가정) 은
+[infrastructure/helm/security-log-search/README.md](infrastructure/helm/security-log-search/README.md)
+참고.
+
+> OpenSearch / ClickHouse / PostgreSQL / Kafka / Redis 는 외부 cluster 를 가정합니다.
+> chart 는 endpoint 만 주입하고 의존을 운영하지 않습니다.
+
+> Flink correlation job 은 본 chart 에 포함되지 않습니다. 운영은
+> [Flink Kubernetes Operator](https://github.com/apache/flink-kubernetes-operator)
+> 의 `FlinkDeployment` / `FlinkSessionJob` CR 로 별도 관리.
+
+### GitOps (ArgoCD)
+
 - `infrastructure/argocd/applicationset.yaml` — dev / staging / prod 3개 Application 자동 생성
 - 자세한 사용법은 [infrastructure/argocd/README.md](infrastructure/argocd/README.md)
 
