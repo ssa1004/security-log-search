@@ -5,9 +5,9 @@
 
 ## 맥락
 
-본 서비스는 다른 시스템의 로그를 수집 / 검색 / 알람으로 변환하는 SIEM. 운영자가 *시스템
-자체* 의 건강도와 SLO 를 실시간으로 봐야 한다. 모니터링 항목이 산발적으로 늘면 dashboard 가
-결국 안 보게 된다 — 처음부터 *모델 기반* 으로 어떤 지표를 어디에 두는지 정해야 한다.
+본 서비스는 다른 시스템의 로그를 수집 / 검색 / 알람으로 변환하는 SIEM. 운영자가 시스템
+자체의 건강도와 SLO 를 실시간으로 봐야 한다. 모니터링 항목이 산발적으로 늘면 dashboard 가
+결국 방치된다 — 처음부터 모델 기반으로 어떤 지표를 어디에 두는지 정해야 한다.
 
 ## 검토한 모델
 
@@ -105,25 +105,25 @@ cardinality 통제:
 ## 결과
 
 - 새 운영자가 4개 대시보드 + 1개 runbook 만 봐도 시스템 상태 파악 가능.
-- alert 가 떴을 때 *어느 패널을 봐야 하는지* 가 명확 — runbook 의 1번 항목이 항상 해당
+- alert 가 떴을 때 어느 패널을 봐야 하는지가 명확 — runbook 의 1번 항목이 항상 해당
   패널을 가리킴.
 - 메트릭 이름 / 태그 컨벤션이 코드 (SecurityLogMetrics) + dashboard JSON + Prometheus rule 의
   3개 위치에서 동일하게 유지되도록 강제.
 
 ## 단점
 
-- dashboard JSON 이 코드와 *분리* 되어 있어, 메트릭 이름이 바뀌면 grep 으로 두 곳 (코드 +
+- dashboard JSON 이 코드와 분리되어 있어, 메트릭 이름이 바뀌면 grep 으로 두 곳 (코드 +
   JSON) 갱신 필요. 후속으로 Grafonnet / Jsonnet 으로 generate 검토.
-- Flink / ClickHouse / OpenSearch exporter 의 메트릭 이름은 *외부 component 의 spec* 이라
+- Flink / ClickHouse / OpenSearch exporter 의 메트릭 이름은 외부 component 의 spec 이라
   버전 업그레이드 시 깨질 수 있음. 회귀 검증 필요.
-- false-positive ratio 같은 *도메인* 메트릭은 본 ADR 시점에 placeholder 로 남았음. 룰 품질
+- false-positive ratio 같은 도메인 메트릭은 본 ADR 시점에 placeholder 로 남았음. 룰 품질
   추적이 운영의 핵심이라 후속 commit 우선순위.
 
 ## 다시 검토할 시점
 
 - tenant 가 수백 개를 넘으면 cardinality 폭발. recording rule 로 tenant tag 를 drop 하거나
   per-tenant dashboard 로 분리.
-- 운영자가 dashboard 를 *안 본다* 는 신호 (장애 대응 시 Slack 으로만 디버깅) 가 보이면
+- 운영자가 dashboard 를 안 본다는 신호 (장애 대응 시 Slack 으로만 디버깅) 가 보이면
   dashboard 를 단순화 / 재구성.
 - distributed tracing (OpenTelemetry) 도입 시점에 latency dashboard 와 trace 연동.
 

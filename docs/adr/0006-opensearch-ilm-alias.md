@@ -38,8 +38,8 @@ ILM 정책 (예: tenant 보존 1년 = retention=365d):
 
 운영자 호출:
 
-- {@code POST /api/v1/admin/indices/{tenantId}/rollover} — 수동 trigger (자동 ILM 외)
-- {@code POST /api/v1/admin/indices/{tenantId}/ilm} — 정책 갱신
+- `POST /api/v1/admin/indices/{tenantId}/rollover` — 수동 trigger (자동 ILM 외)
+- `POST /api/v1/admin/indices/{tenantId}/ilm` — 정책 갱신
 
 본 시스템의 application layer 는 항상 alias 만 사용 (실제 인덱스 이름 안 노출).
 

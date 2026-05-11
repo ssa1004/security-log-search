@@ -36,7 +36,7 @@ e2e-tests                (Testcontainers 통합 시나리오)
 ```
 
 `security-streaming` 의 Flink connector / runtime 의존성은 다른 모듈에 영향 주지 않도록
-{@code compileOnly} 또는 {@code provided} 로 처리. 의존성 그래프는 다음과 같이 단방향:
+`compileOnly` 또는 `provided` 로 처리. 의존성 그래프는 다음과 같이 단방향:
 
 ```
 domain ← application ← adapter-out / adapter-in
