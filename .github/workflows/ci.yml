@@ -22,7 +22,8 @@ env:
 jobs:
   test:
     name: Unit + slice tests
-    runs-on: ubuntu-latest
+    # ubuntu-latest 가 아닌 LTS 핀 — 24.04 EOL (2029) 까지는 reproducible 빌드 보장.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +35,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Compile
         run: ./gradlew --no-daemon compileJava compileTestJava
@@ -60,7 +61,7 @@ jobs:
 
   integration-test:
     name: Testcontainers IT
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: test
     steps:
@@ -69,7 +70,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Run e2e Testcontainers
         run: ./gradlew --no-daemon :e2e-tests:integrationTest
@@ -85,7 +86,7 @@ jobs:
 
   build-image:
     name: Build & push container image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: [test, integration-test]
     if: github.event_name == 'push'
@@ -135,7 +136,7 @@ jobs:
           provenance: true
 
       - name: Trivy image scan (API)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/security-log-search:${{ steps.meta.outputs.tag }}
           severity: HIGH,CRITICAL
