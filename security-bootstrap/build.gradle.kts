@@ -20,7 +20,8 @@ dependencies {
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
     // OpenSearch / ClickHouse 클라이언트는 conditional 로 켜지지만 컴파일 시점에는 필요.
-    implementation("org.opensearch.client:opensearch-java:2.10.4")
+    // adapter-out 과 동일 버전 사용 — 두 모듈이 다른 라인이면 transport 충돌.
+    implementation("org.opensearch.client:opensearch-java:2.18.0")
     implementation("org.opensearch.client:opensearch-rest-client:2.18.0")
     // OpenSearch transport 가 의존하는 httpcore5 — Spring Boot 가 직접 관리하지 않음.
     implementation("org.apache.httpcomponents.core5:httpcore5:5.2.5")
