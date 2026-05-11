@@ -13,6 +13,9 @@ dependencies {
     testImplementation(project(":security-bootstrap"))
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // bootstrap 의 SecurityLogSearchApplication 이 @EnableJpaRepositories(basePackages=...) 를
+    // 사용하므로 spring-data-jpa annotation classfile 이 컴파일 시점에 보여야 한다.
+    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")

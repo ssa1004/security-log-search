@@ -160,6 +160,10 @@ public class OpenSearchEventSearchAdapter implements EventSearchPort {
       }
     }
 
+    // OpenSearch Java client 는 hit source 를 typed class 로 deserialize 하므로
+    // 임의 JSON 을 받기 위해 raw Map.class 를 넘긴다 (rawtypes 는 mapHits / mapFacets
+    // 쪽에서 일관되게 suppress).
+    @SuppressWarnings("rawtypes")
     SearchResponse<Map> response;
     try {
       response = client.search(requestBuilder.build(), Map.class);
