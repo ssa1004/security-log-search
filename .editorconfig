@@ -1,0 +1,44 @@
+# EditorConfig — https://editorconfig.org
+# Java / Kotlin DSL / YAML / Markdown / SQL 등 mixed 폴리리포 일관 포맷.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Kotlin DSL — Gradle 의 권장 (4 spaces 가 기본).
+[*.{kt,kts}]
+indent_size = 4
+ij_kotlin_imports_layout = *
+ij_kotlin_packages_to_use_import_on_demand = unset
+
+# YAML / JSON / Markdown — 2 spaces 가 표준.
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.{json,jsonc}]
+indent_size = 2
+
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false  # markdown 의 줄바꿈 두 칸 trailing space 보존.
+
+# Shell / SQL — 4 spaces (SQL CLI 들의 기본 정렬).
+[*.{sh,bash,zsh}]
+indent_size = 2
+
+[*.sql]
+indent_size = 2
+
+# Properties — Gradle / Spring application.properties 는 indent 안 씀.
+[*.properties]
+indent_size = 4
+charset = utf-8
+
+# Makefile — tab 강제.
+[Makefile]
+indent_style = tab
