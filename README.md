@@ -1,5 +1,14 @@
 # Security Log Search
 
+[![CI](https://github.com/ssa1004/security-log-search/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ssa1004/security-log-search/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F.svg?logo=springboot)](https://spring.io/projects/spring-boot)
+[![Apache Flink 1.18](https://img.shields.io/badge/Apache%20Flink-1.18.1-E6526F.svg?logo=apacheflink)](https://flink.apache.org/)
+[![OpenSearch 2.x](https://img.shields.io/badge/OpenSearch-2.x-005EB8.svg?logo=opensearch)](https://opensearch.org/)
+[![ClickHouse](https://img.shields.io/badge/ClickHouse-FFCC01.svg?logo=clickhouse&logoColor=black)](https://clickhouse.com/)
+[![Code style: editorconfig](https://img.shields.io/badge/code%20style-editorconfig-000000.svg?logo=editorconfig)](.editorconfig)
+
 대용량 보안 로그를 수집·정규화·검색·분석하는 SIEM 형태의 백엔드 플랫폼입니다.
 다양한 source (방화벽 / EDR / 시스템 / 응용 로그) 의 raw event 를 ECS (Elastic Common Schema,
 보안·관측 로그 표준) 또는 OCSF (Open Cybersecurity Schema Framework, 벤더 중립 보안 로그
