@@ -21,7 +21,7 @@
 
 ## 2. 5분 우회 (담을 그릇이 없으면 흘려보내기 전에)
 
-ingest rate 가 비정상적으로 *낮으면* 일반적으로 데이터 *유실* 위험이 있다. 가능하면 client
+ingest rate 가 비정상적으로 낮으면 일반적으로 데이터 유실 위험이 있다. 가능하면 client
 측 buffer 를 늘려 본 서비스 회복까지 기다리게 한다.
 
 - Fluent Bit / Filebeat 사용 시 — `Storage.type=filesystem` + `Mem_Buf_Limit` 확인.
@@ -81,7 +81,7 @@ ingest rate 가 비정상적으로 *낮으면* 일반적으로 데이터 *유실
   ```
   select id, active, updated_at from tenants where id = '<tenant>';
   ```
-- 비활성 (`active=false`) 으로 바뀌어 있으면 — *의도된 차단인지* 확인 (영업 / 결제 / 정책).
+- 비활성 (`active=false`) 으로 바뀌어 있으면 — 의도된 차단인지 확인 (영업 / 결제 / 정책).
 - 활성인데 ingest 가 0 → 수집 agent 의 인증 토큰 / API key 만료 가능. 해당 tenant 측
   contact 로 확인.
 

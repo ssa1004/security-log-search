@@ -8,10 +8,10 @@
 보안 로그를 정규화하기 위한 표준 스키마가 두 개 경쟁한다.
 
 - ECS (Elastic Common Schema) — Elastic 사가 정의한 보안 / 관측 로그 스키마. 8.x. 필드
-  네이밍이 dotted (예: {@code event.action}, {@code source.ip}). Beats / Logstash 같은
+  네이밍이 dotted (예: `event.action`, `source.ip`). Beats / Logstash 같은
   Elastic 생태계에서 native.
 - OCSF (Open Cybersecurity Schema Framework) — OASIS 가 추진하는 벤더 중립 스키마. 1.x.
-  필드 네이밍이 nested object (예: {@code src_endpoint.ip}, {@code actor.user.name}).
+  필드 네이밍이 nested object (예: `src_endpoint.ip`, `actor.user.name`).
   Microsoft, Splunk, AWS, IBM 등이 공동 추진.
 
 raw event source (방화벽 / EDR / 시스템 / 응용) 마다 export 하는 schema 가 다르다.
@@ -27,8 +27,8 @@ ECS-native 인 곳도 있고 OCSF-native 인 곳도 있다.
 
 ## 결정
 
-대안 3 채택. 도메인의 {@link com.example.security.domain.event.LogEvent} 는 ECS 형태로
-모델링하고, {@link com.example.security.domain.mapping.OcsfNormalizer} 가 OCSF payload 를
+대안 3 채택. 도메인의 `com.example.security.domain.event.LogEvent` 는 ECS 형태로
+모델링하고, `com.example.security.domain.mapping.OcsfNormalizer` 가 OCSF payload 를
 ECS 로 변환한다.
 
 OCSF → ECS 핵심 매핑:

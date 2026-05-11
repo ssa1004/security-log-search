@@ -6,7 +6,7 @@
 ## 맥락
 
 ADR-0002 에서 ECS 를 1차 도메인 모델로 두고 OCSF source 는 변환해서 받기로 했다. 그러나
-실제 운영에서는 *raw 포맷이 ECS / OCSF 어느 표준도 따르지 않는* source 가 다수 존재한다.
+실제 운영에서는 raw 포맷이 ECS / OCSF 어느 표준도 따르지 않는 source 가 다수 존재한다.
 
 대표 예:
 
@@ -17,7 +17,7 @@ ADR-0002 에서 ECS 를 1차 도메인 모델로 두고 OCSF source 는 변환�
   `objectRef.namespace`, `responseStatus.code`, `sourceIPs`). ECS 에 매핑 정의 부재.
 - (후속 후보) syslog (RFC 5424), Windows Event Log XML, GCP Cloud Audit Logs.
 
-이 source 들은 *각 source 의 raw 포맷 → ECS* 로 매퍼가 변환해야 SIEM 으로 들어올 수 있다.
+이 source 들은 각 source 의 raw 포맷 → ECS 매퍼를 거쳐야 SIEM 으로 들어올 수 있다.
 "클라이언트가 ECS 로 보낸다" 는 가정은 현실에서 깨진다 (수집 agent 가 ECS-aware 한 경우는
 Filebeat 등 일부에 한정).
 
@@ -102,7 +102,7 @@ severity 는 outcome + verb + HTTP code 조합으로 결정 (401/403 → HIGH, 5
 
 ### 미지원 필드 처리 — labels 보존
 
-매퍼가 ECS 정식 필드로 매핑하지 않은 raw 키는 *labels* 에 원본 값을 보존한다 (ECS spec 에서
+매퍼가 ECS 정식 필드로 매핑하지 않은 raw 키는 `labels` 에 원본 값을 보존한다 (ECS spec 에서
 "vendor-specific 필드는 labels 에" 권고). 이렇게 하면:
 
 - 검색 / 운영 UI 에서 labels 를 그대로 노출 가능 (key-value 검색).
@@ -124,11 +124,11 @@ severity 는 outcome + verb + HTTP code 조합으로 결정 (401/403 → HIGH, 5
 
 ## 단점
 
-- 매퍼 별로 *주관적인* 카테고리 / severity 결정 규칙이 들어감. CloudTrail 의 `eventName`
+- 매퍼 별로 주관적인 카테고리 / severity 결정 규칙이 들어간다. CloudTrail 의 `eventName`
   prefix 만으로 카테고리를 정하는 식은 정확도에 한계. 후속 enrichment 단계가 필요할 수 있다.
 - 새 source 의 raw 포맷이 변하면 (예: K8s audit v1 → v2) 매퍼 갱신 필요. 회귀 테스트 필수.
 - `requestParameters` 같이 큰 nested 객체는 labels 에 문자열로 들어가서 OpenSearch 의 mapping
-  explosion 위험은 줄지만, *구조 검색* 은 불가능 (별도 enrichment 필요).
+  explosion 위험은 줄지만, 구조 검색은 불가능 (별도 enrichment 필요).
 
 ## 다시 검토할 시점
 
