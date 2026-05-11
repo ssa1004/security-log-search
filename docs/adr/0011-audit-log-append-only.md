@@ -38,7 +38,7 @@ ISMS-P 2.9 / SOC 2 / GDPR 등 대부분의 보안 / 컴플라이언스 요구는
 ### 검색 가능성
 
 - 인덱스: (tenant_id, occurred_at), actor, action
-- {@code QueryAuditLogUseCase} 가 검색 API 제공 (감사관 / 보안 담당자 용)
+- `QueryAuditLogUseCase` 가 검색 API 제공 (감사관 / 보안 담당자 용)
 
 ### 별도 SIEM sink (옵션)
 

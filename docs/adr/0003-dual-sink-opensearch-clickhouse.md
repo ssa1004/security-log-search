@@ -41,8 +41,8 @@ loader 로 전환.
 
 검색 / 집계 라우팅은 application layer 에서 명확히 갈래:
 
-- {@code SearchLogEventsUseCase} → OpenSearch
-- {@code AggregateLogStatsUseCase} → ClickHouse
+- `SearchLogEventsUseCase` → OpenSearch
+- `AggregateLogStatsUseCase` → ClickHouse
 
 ## 결과
 

@@ -30,9 +30,9 @@ exactly-once 보증을 모두 요구하기 때문.
 
 핵심 패턴:
 
-- {@code KeyedBroadcastProcessFunction} — 룰을 broadcast state 로, 이벤트를 keyed state
+- `KeyedBroadcastProcessFunction` — 룰을 broadcast state 로, 이벤트를 keyed state
   로 받아 평가
-- 룰 변경 채널 — Postgres alert_rules 테이블 → 별도 reader 가 Kafka {@code alert-rules.broadcast}
+- 룰 변경 채널 — Postgres alert_rules 테이블 → 별도 reader 가 Kafka `alert-rules.broadcast`
   topic 으로 publish → Flink job 이 broadcast 로 수신
 - savepoint — 코드 변경 시 savepoint 로 stop → 새 버전으로 restore 하면 state 보존
 

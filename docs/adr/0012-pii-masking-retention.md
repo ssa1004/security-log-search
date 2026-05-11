@@ -35,8 +35,8 @@ Tenant 별로 PII 정책 설정:
 | ADMIN | 항상 NONE (전체 보임) |
 | AUDITOR | STRICT (마스킹 강제) |
 
-application layer 의 SearchService 가 결과 반환 직전에 마스킹 적용 ({@link
-com.example.security.domain.event.PiiMasker}).
+application layer 의 SearchService 가 결과 반환 직전에 마스킹 적용
+(`com.example.security.domain.event.PiiMasker`).
 
 ### 2. 보존 기간별 마스킹
 
@@ -51,7 +51,7 @@ com.example.security.domain.event.PiiMasker}).
 
 ### export 시 추가 검증
 
-- {@code AuditAction.EXPORT_RESULTS} 가 audit_entries 에 기록됨
+- `AuditAction.EXPORT_RESULTS` 가 audit_entries 에 기록됨
 - export 결과 파일에 워터마크 (운영자 sub + 시각) 삽입 (옵션)
 
 ## 결과

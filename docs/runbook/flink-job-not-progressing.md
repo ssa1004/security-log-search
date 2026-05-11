@@ -3,7 +3,7 @@
 알람: `FlinkCorrelationJobLagging` (Kafka consumer lag 가 5만건 이상으로 5분간 지속) 또는
 `FlinkCheckpointFailed` (마지막 성공 checkpoint 가 10분 이상 전).
 
-처음 마주치는 경우 일반적으로 *데이터가 멈춘 게 아니라 ack 가 멈춘* 상황이라는 점을 먼저
+처음 마주치는 경우 일반적으로 데이터가 멈춘 게 아니라 ack 가 멈춘 상황이라는 점을 먼저
 의심한다 — Kafka 입장에서 producer 는 계속 publish 하는데 Flink 가 commit 을 못 하고 있는 경우.
 
 ## 1. 영향 확인
@@ -20,8 +20,8 @@
 
 ## 2. 5분 우회
 
-알람 평가가 잠시 멈추는 것은 *수집* 보다는 *지연* 영향이 크다. 즉시 우회보다 root cause 를
-찾는 데 집중. 다만 다음 두 경우는 즉시 조치:
+알람 평가가 잠시 멈추는 것은 수집 자체가 끊기는 것보다 지연 누적의 영향이 크다. 즉시
+우회보다 root cause 를 찾는 데 집중. 다만 다음 두 경우는 즉시 조치:
 
 - checkpoint 가 디스크 부족으로 실패 (`FAILURE_REASON: NO_SPACE_LEFT`) → checkpoint
   storage (S3 / HDFS) 의 quota 확인 및 증설.
@@ -66,7 +66,7 @@
 
 - **상태 schema 호환성 깨짐** — domain `LogEvent` 또는 `AlertRule` 에 필드를 추가/삭제하면
   기존 savepoint 와 호환 깨짐. 해결: 마지막 정상 savepoint 가 있다면 거기서 재시작 +
-  schema migration. 없다면 *empty state* 로 재시작 — 진행 중 알람 evaluation window 손실
+  schema migration. 없다면 empty state 로 재시작 — 진행 중 알람 evaluation window 손실
   (1 window 의 false negative 리스크) 을 운영자가 수용해야 함.
   ```
   flink run -s s3://flink-savepoints/correlation/2026-05-09-1200 \
@@ -85,7 +85,7 @@
 - savepoint trigger 후 정상 종료 → restart 한 경우, 그 시점부터의 새 savepoint 가 잘
   생성되는지 30분 모니터링.
 - Postmortem 항목:
-  - lag 누적 시간 동안 *알람 발화 지연* 이 있었음. SOC 운영자에게 후처리 통보.
+  - lag 누적 시간 동안 알람 발화가 지연됐다. SOC 운영자에게 후처리 통보.
   - hot key / parallelism 부족이 원인이면 해당 룰의 `groupByField` 재설계 또는 capacity
     plan 갱신.
 

@@ -37,11 +37,11 @@ B 의 보안 로그를 절대 보면 안 된다 — 보안 로그 자체가 침�
 ### Layer 3 — JWT claim
 
 - 모든 요청은 `tenant_id` claim 을 가져야 함 (JWT 디코드 시 검증)
-- {@link com.example.security.adapter.in.security.OperatorContextResolver} 가 추출
+- `com.example.security.adapter.in.security.OperatorContextResolver` 가 추출
 
 ### Layer 4 — application layer query rewrite
 
-- {@link com.example.security.application.service.SearchLogEventsService} 가 query 객체의
+- `com.example.security.application.service.SearchLogEventsService` 가 query 객체의
   tenantId 와 operator.tenantId 가 일치하는지 검증 (admin 우회 가능)
 - OpenSearch 호출 시 BoolQuery filter 에 `tenant_id.keyword=tenantId` 강제 주입
 - ClickHouse 호출 시 SQL parameter 로 `WHERE tenant_id = ?` 명시
