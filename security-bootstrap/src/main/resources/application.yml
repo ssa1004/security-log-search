@@ -27,6 +27,11 @@ spring:
 server:
   port: 8080
   shutdown: graceful
+  # 요청 본문 상한 — API4 (자원 소비 제한). Sigma import / ingest payload 가 5 MB 이상이면 거부.
+  tomcat:
+    max-http-form-post-size: 5MB
+    max-swallow-size: 5MB
+  max-http-request-header-size: 16KB
 
 management:
   endpoints:

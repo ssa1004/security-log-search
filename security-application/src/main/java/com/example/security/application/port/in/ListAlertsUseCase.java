@@ -29,7 +29,17 @@ public interface ListAlertsUseCase {
       Optional<Instant> from,
       Optional<Instant> to,
       int size,
-      Optional<UUID> after) {}
+      Optional<UUID> after) {
+
+    /** 알람 timeline 한 페이지 상한 — UI 가 cursor 로 추가 페이지 요청. (API4 — 자원 소비 제한) */
+    public static final int MAX_SIZE = 500;
+
+    public ListAlertsQuery {
+      if (size < 1 || size > MAX_SIZE) {
+        throw new IllegalArgumentException("size 는 1~" + MAX_SIZE + ": " + size);
+      }
+    }
+  }
 
   record Page(List<Alert> alerts, UUID nextCursor) {}
 }

@@ -1,5 +1,6 @@
 package com.example.security.application.service;
 
+import com.example.security.application.exception.InsufficientPrivilegeException;
 import com.example.security.application.exception.TenantNotFoundException;
 import com.example.security.application.port.in.OnboardTenantUseCase;
 import com.example.security.application.port.in.OperatorContext;
@@ -40,6 +41,7 @@ public class OnboardTenantService implements OnboardTenantUseCase {
   @Override
   @Transactional
   public Tenant onboard(OnboardCommand cmd, OperatorContext operator) {
+    enforcePlatformAdmin(operator);
     var tenant =
         new Tenant(
             cmd.tenantId(),
@@ -77,6 +79,7 @@ public class OnboardTenantService implements OnboardTenantUseCase {
   @Override
   @Transactional
   public void deactivate(TenantId tenantId, OperatorContext operator) {
+    enforcePlatformAdmin(operator);
     var existing = tenants.findById(tenantId).orElseThrow(() -> new TenantNotFoundException(tenantId));
     var deactivated =
         new Tenant(
@@ -100,5 +103,15 @@ public class OnboardTenantService implements OnboardTenantUseCase {
             tenantId.value(),
             operator.sourceIp(),
             Map.of("active", "false")));
+  }
+
+  /**
+   * tenant 라이프사이클 (onboard / deactivate) 은 플랫폼 운영자만 — 한 tenant 의 ADMIN 이
+   * 다른 tenant 를 생성 / 비활성화하는 것을 차단.
+   */
+  private static void enforcePlatformAdmin(OperatorContext operator) {
+    if (!operator.canQueryOtherTenant()) {
+      throw new InsufficientPrivilegeException("PLATFORM_ADMIN");
+    }
   }
 }
