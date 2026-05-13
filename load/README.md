@@ -220,7 +220,7 @@ iteration 안에 setup → publish → polling 의 누적 상태가 중요한 (�
 ## 결과 plot
 
 각 시나리오를 `--out json=build/k6-reports/<name>.json` 으로 떨궈서 dashboard 에 올릴 수
-있다. `mini-shop-observability` 의 Prometheus remote-write 와 연동하면 `k6 → Prom →
+있다. `commerce-ops` 의 Prometheus remote-write 와 연동하면 `k6 → Prom →
 Grafana` 도 가능 — `--out experimental-prometheus-rw=http://prom:9090/api/v1/write`.
 
 더 큰 부하는 k6 cloud / k6 distributed mode 가 필요 — 본 시나리오는 single-node 기준
