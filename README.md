@@ -214,6 +214,30 @@ curl -s 'http://localhost:8080/api/v1/alerts?tenantId=acme' | jq    # 3) 알람 
 `scripts/sample-sigma-rules/` 의 YAML 은 [SampleSigmaRulesIntegrationTest](security-application/src/test/java/com/example/security/application/sigma/SampleSigmaRulesIntegrationTest.java)
 가 매번 parse + 변환을 검증하므로 mapper 가 변경되면 데모도 같이 깨져 stale 안 됨.
 
+## Load test
+
+[k6](https://k6.io/) 기반의 SIEM 부하 시나리오 5종이 `load/k6/scenarios/` 아래에
+있습니다. 단순 RPS 가 아닌 *SIEM 특유의 비용* 을 본다 — OpenSearch ingestion throughput,
+Lucene full-text 비용, terms aggregation (facet) 비용, multi-tenant 격리 invariant,
+Sigma 룰 적용 후 Flink streaming end-to-end latency.
+
+```bash
+brew install k6                              # 또는 docker
+docker compose -f infrastructure/docker/docker-compose.yml up -d
+docker compose -f infrastructure/docker/docker-compose.yml --profile app up -d
+./scripts/run-load.sh                        # 5 시나리오 일괄
+```
+
+| 시나리오 | 목적 | 부하 모델 |
+|---|---|---|
+| `log-ingest` | OpenSearch ingestion throughput | 2000 req/s × 60s |
+| `full-text-search` | Lucene query 비용 | 100 req/s × 60s |
+| `facet-aggregation` | terms aggregation 비용 | 50 req/s × 60s |
+| `multi-tenant-isolation` | acme → globex leak 0건 invariant | 0→3 VU × 45s |
+| `alert-rule-eval` | Sigma → Flink → alert.fired latency | 0→2 VU × 75s |
+
+자세한 metric / threshold / 환경변수는 [load/README.md](load/README.md) 참고.
+
 ## ISMS-P 통제 매핑
 
 ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매핑은 [ADR-0010](docs/adr/0010-isms-p-control-mapping.md)
