@@ -20,5 +20,15 @@ public interface QueryAuditLogUseCase {
       Optional<AuditAction> action,
       Optional<Instant> from,
       Optional<Instant> to,
-      int size) {}
+      int size) {
+
+    /** audit 조회 페이지 크기 상한 — 무제한 dump 방지 (API4 — 자원 소비 제한). */
+    public static final int MAX_SIZE = 1000;
+
+    public AuditQuery {
+      if (size < 1 || size > MAX_SIZE) {
+        throw new IllegalArgumentException("size 는 1~" + MAX_SIZE + ": " + size);
+      }
+    }
+  }
 }

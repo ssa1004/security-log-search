@@ -1,5 +1,7 @@
 package com.example.security.application.service;
 
+import com.example.security.application.exception.InsufficientPrivilegeException;
+import com.example.security.application.exception.TenantMismatchException;
 import com.example.security.application.exception.TenantNotFoundException;
 import com.example.security.application.port.in.ManageOpenSearchIndexUseCase;
 import com.example.security.application.port.in.OperatorContext;
@@ -37,6 +39,7 @@ public class ManageOpenSearchIndexService implements ManageOpenSearchIndexUseCas
 
   @Override
   public void createInitialIndex(TenantId tenantId, OperatorContext operator) {
+    enforceAdmin(operator, tenantId);
     var tenant = tenants.findById(tenantId).orElseThrow(() -> new TenantNotFoundException(tenantId));
     indexAdmin.provisionForTenant(tenant);
     appendAudit(tenantId, operator, AuditAction.INDEX_CREATED, Map.of("tenant", tenantId.value()));
@@ -44,6 +47,7 @@ public class ManageOpenSearchIndexService implements ManageOpenSearchIndexUseCas
 
   @Override
   public RolloverResult triggerRollover(TenantId tenantId, OperatorContext operator) {
+    enforceAdmin(operator, tenantId);
     var tenant = tenants.findById(tenantId).orElseThrow(() -> new TenantNotFoundException(tenantId));
     var result = indexAdmin.triggerRollover(tenant);
     if (result.rolledOver()) {
@@ -58,6 +62,7 @@ public class ManageOpenSearchIndexService implements ManageOpenSearchIndexUseCas
 
   @Override
   public void applyIlmPolicy(TenantId tenantId, OperatorContext operator) {
+    enforceAdmin(operator, tenantId);
     var tenant = tenants.findById(tenantId).orElseThrow(() -> new TenantNotFoundException(tenantId));
     indexAdmin.applyIlmPolicy(tenant);
     appendAudit(
@@ -65,6 +70,24 @@ public class ManageOpenSearchIndexService implements ManageOpenSearchIndexUseCas
         operator,
         AuditAction.ILM_POLICY_APPLIED,
         Map.of("policy", tenant.ilmPolicyName()));
+  }
+
+  /**
+   * 인덱스 admin 동작 (생성 / rollover / ILM 적용) 은 tenant ADMIN role 이상 + 본 tenant 또는
+   * PLATFORM_ADMIN 이 다른 tenant 를 관리할 때만 허용.
+   *
+   * <p>ISMS-P 2.6 (접근 통제) — function-level authorization 분리.
+   */
+  private static void enforceAdmin(OperatorContext operator, TenantId tenant) {
+    if (operator.canQueryOtherTenant()) {
+      return;
+    }
+    if (!operator.isAdmin()) {
+      throw new InsufficientPrivilegeException("ADMIN");
+    }
+    if (!operator.tenantId().equals(tenant)) {
+      throw new TenantMismatchException(operator.tenantId(), tenant);
+    }
   }
 
   private void appendAudit(

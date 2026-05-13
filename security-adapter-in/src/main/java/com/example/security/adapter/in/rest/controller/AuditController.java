@@ -6,11 +6,14 @@ import com.example.security.application.port.in.QueryAuditLogUseCase;
 import com.example.security.application.port.in.QueryAuditLogUseCase.AuditQuery;
 import com.example.security.domain.audit.AuditEntry.AuditAction;
 import com.example.security.domain.common.TenantId;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** use case 8 — /api/v1/audit. */
 @RestController
 @RequestMapping("/api/v1/audit")
+@Validated
 public class AuditController {
 
   private final QueryAuditLogUseCase useCase;
@@ -36,7 +40,7 @@ public class AuditController {
       @RequestParam(required = false) AuditAction action,
       @RequestParam(required = false) Instant from,
       @RequestParam(required = false) Instant to,
-      @RequestParam(defaultValue = "100") int size) {
+      @RequestParam(defaultValue = "100") @Min(1) @Max(AuditQuery.MAX_SIZE) int size) {
     var query =
         new AuditQuery(
             TenantId.of(tenantId),
