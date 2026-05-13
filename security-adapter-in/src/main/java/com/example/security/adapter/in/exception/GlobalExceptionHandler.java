@@ -1,6 +1,7 @@
 package com.example.security.adapter.in.exception;
 
 import com.example.security.application.exception.AlertNotFoundException;
+import com.example.security.application.exception.InsufficientPrivilegeException;
 import com.example.security.application.exception.RuleNotFoundException;
 import com.example.security.application.exception.TenantMismatchException;
 import com.example.security.application.exception.TenantNotFoundException;
@@ -20,6 +21,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(TenantMismatchException.class)
   public ResponseEntity<Map<String, Object>> tenantMismatch(TenantMismatchException e) {
     return problem(HttpStatus.FORBIDDEN, "tenant_mismatch", e.getMessage());
+  }
+
+  @ExceptionHandler(InsufficientPrivilegeException.class)
+  public ResponseEntity<Map<String, Object>> insufficientPrivilege(InsufficientPrivilegeException e) {
+    return problem(HttpStatus.FORBIDDEN, "insufficient_privilege", e.getMessage());
   }
 
   @ExceptionHandler(TenantNotFoundException.class)

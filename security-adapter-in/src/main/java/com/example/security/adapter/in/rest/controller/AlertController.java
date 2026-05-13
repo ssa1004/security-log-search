@@ -7,11 +7,14 @@ import com.example.security.application.port.in.ListAlertsUseCase.ListAlertsQuer
 import com.example.security.application.port.in.ListAlertsUseCase.Page;
 import com.example.security.domain.common.TenantId;
 import com.example.security.domain.rule.Alert.AlertStatus;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** use case 6 — /api/v1/alerts list + acknowledge / resolve / false-positive. */
 @RestController
 @RequestMapping("/api/v1/alerts")
+@Validated
 public class AlertController {
 
   private final ListAlertsUseCase useCase;
@@ -46,7 +50,7 @@ public class AlertController {
       @RequestParam(required = false) AlertStatus status,
       @RequestParam(required = false) Instant from,
       @RequestParam(required = false) Instant to,
-      @RequestParam(defaultValue = "50") int size,
+      @RequestParam(defaultValue = "50") @Min(1) @Max(ListAlertsQuery.MAX_SIZE) int size,
       @RequestParam(required = false) UUID after) {
     var query =
         new ListAlertsQuery(
