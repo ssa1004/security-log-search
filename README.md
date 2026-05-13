@@ -356,7 +356,7 @@ chart 가 만드는 리소스:
 | [billing-platform](https://github.com/ssa1004/billing-platform) | 결제 / 정산 도메인 | billing 의 application audit log 를 본 repo 가 수집 |
 | [resell-orderbook](https://github.com/ssa1004/resell-orderbook) | 리셀 주문장 | 매칭 엔진의 app log 를 본 repo 가 수집 |
 | [gpu-job-orchestrator](https://github.com/ssa1004/gpu-job-orchestrator) | GPU 학습 job 스케줄링 | K8s audit log 를 본 repo 가 ECS 매핑 후 수집 (ADR-0014) |
-| [mini-shop-observability](https://github.com/ssa1004/mini-shop-observability) | OTel / Prometheus / Loki 플레이그라운드 | observability stack 공통 — 본 repo 의 Grafana dashboard 가 같은 패턴 |
+| [commerce-ops](https://github.com/ssa1004/commerce-ops) | OTel / Prometheus / Loki 플레이그라운드 | observability stack 공통 — 본 repo 의 Grafana dashboard 가 같은 패턴 |
 | **security-log-search** | 본 repo — SIEM 수집 / 검색 / 알람 | — |
 
 본 repo 의 통합점은 세 방향:
