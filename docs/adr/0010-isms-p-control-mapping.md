@@ -30,13 +30,19 @@ ISMS-P (정보보호 및 개인정보보호 관리체계 인증) 는 한국 KISA
 
 | 동작 | audit_entries.action |
 |---|---|
+| raw event 수집 (운영자 디버그 호출 시) | INGEST |
 | 운영자 검색 | SEARCH |
 | 운영자 통계 query | STATS_QUERY |
 | 룰 생성 / 수정 / 삭제 | RULE_CREATED / RULE_UPDATED / RULE_DELETED |
+| 알람 발화 (Flink job) | ALERT_FIRED |
 | 알람 처리 | ALERT_ACKNOWLEDGED / RESOLVED / FALSE_POSITIVE |
 | 인덱스 관리 | INDEX_CREATED / INDEX_ROLLOVER / ALIAS_SWAP / ILM_POLICY_APPLIED |
 | 테넌트 라이프사이클 | TENANT_ONBOARDED / TENANT_DEACTIVATED |
 | 운영자 로그인 / export | LOGIN_OPERATOR / EXPORT_RESULTS |
+
+> INGEST 는 대량 트래픽 (이벤트 수집) 이라 평소엔 audit 에 남기지 않는다 — noise. raw event
+> 의 정규화 디버그 같은 운영자 명시 호출 시에만 기록한다. ALERT_FIRED 는 운영자가 아닌 시스템
+> (Flink correlation job) 이 actor 이며, 이후 운영자의 ALERT_ACKNOWLEDGED 와 구분된다.
 
 각 audit_entries row 는 actor (subject) + actor_role + source_ip + occurred_at + target +
 details 를 포함 — "누가 언제 어디서 무엇을 했는가" 를 명확히.

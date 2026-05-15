@@ -15,8 +15,10 @@ import java.util.UUID;
  * <p>본 도메인에서 감사 대상이 되는 동작:
  *
  * <ul>
+ *   <li>INGEST — raw event 수집 (대량 트래픽이라 평소엔 기록 안 하고, 운영자 디버그 호출 시에만)
  *   <li>SEARCH — 운영자가 검색 API 호출 (검색어 + tenant + 결과 카운트)
  *   <li>RULE_CREATED / RULE_UPDATED / RULE_DELETED — 알람 룰 변경
+ *   <li>ALERT_FIRED — Flink job 이 룰 매칭으로 알람 발화 (시스템 동작)
  *   <li>ALERT_ACKNOWLEDGED / ALERT_RESOLVED / ALERT_FALSE_POSITIVE — 알람 처리
  *   <li>INDEX_ROLLOVER / ALIAS_SWAP — admin 인덱스 작업
  *   <li>TENANT_ONBOARDED / TENANT_DEACTIVATED — 테넌트 라이프사이클
@@ -44,11 +46,13 @@ public record AuditEntry(
   }
 
   public enum AuditAction {
+    INGEST,
     SEARCH,
     STATS_QUERY,
     RULE_CREATED,
     RULE_UPDATED,
     RULE_DELETED,
+    ALERT_FIRED,
     ALERT_ACKNOWLEDGED,
     ALERT_RESOLVED,
     ALERT_FALSE_POSITIVE,
