@@ -38,11 +38,18 @@ ISMS-P (정보보호 및 개인정보보호 관리체계 인증) 는 한국 KISA
 | 알람 처리 | ALERT_ACKNOWLEDGED / RESOLVED / FALSE_POSITIVE |
 | 인덱스 관리 | INDEX_CREATED / INDEX_ROLLOVER / ALIAS_SWAP / ILM_POLICY_APPLIED |
 | 테넌트 라이프사이클 | TENANT_ONBOARDED / TENANT_DEACTIVATED |
+| 플랫폼 관리자의 본인 외 tenant 접근 | CROSS_TENANT_ACCESS |
 | 운영자 로그인 / export | LOGIN_OPERATOR / EXPORT_RESULTS |
 
 > INGEST 는 대량 트래픽 (이벤트 수집) 이라 평소엔 audit 에 남기지 않는다 — noise. raw event
 > 의 정규화 디버그 같은 운영자 명시 호출 시에만 기록한다. ALERT_FIRED 는 운영자가 아닌 시스템
 > (Flink correlation job) 이 actor 이며, 이후 운영자의 ALERT_ACKNOWLEDGED 와 구분된다.
+
+> CROSS_TENANT_ACCESS — 일반 운영자의 tenant 불일치는 거부 (`TenantMismatchException`) 되지만
+> PLATFORM_ADMIN 은 모든 tenant 접근이 허용된다 (ADR-0007 Layer 4 admin 우회). 이 우회 자체가
+> 2.6 (접근 통제) 의 추적 대상이라, 본인 외 tenant 의 검색 / 통계 / 알람 / 룰 / 인덱스 / 감사
+> 로그 접근 시 `CROSS_TENANT_ACCESS` 를 남긴다 (`CrossTenantAccessAudit`). tenant 라이프사이클은
+> 이미 TENANT_ONBOARDED / TENANT_DEACTIVATED 가 같은 역할을 하므로 별도로 남기지 않는다.
 
 각 audit_entries row 는 actor (subject) + actor_role + source_ip + occurred_at + target +
 details 를 포함 — "누가 언제 어디서 무엇을 했는가" 를 명확히.

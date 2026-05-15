@@ -50,7 +50,9 @@ B 의 보안 로그를 절대 보면 안 된다 — 보안 로그 자체가 침�
 
 - 단일 layer 가 깨져도 다른 layer 가 막음 (defense-in-depth)
 - 단일 클러스터 (OpenSearch / ClickHouse / Postgres) 운영 — 비용 효율
-- audit_entries 가 tenant_mismatch 시도를 기록 — incident response
+- audit_entries 가 두 가지를 기록 — incident response 용:
+  - 일반 운영자의 tenant_mismatch 우회 시도 (거부됨)
+  - PLATFORM_ADMIN 의 본인 외 tenant 접근 (허용되지만 `CROSS_TENANT_ACCESS` 로 추적, ADR-0010)
 
 ## 다시 검토할 시점
 
