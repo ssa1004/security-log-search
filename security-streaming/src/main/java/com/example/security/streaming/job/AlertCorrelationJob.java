@@ -5,7 +5,6 @@ import com.example.security.domain.rule.AlertRule;
 import com.example.security.streaming.operator.CorrelationProcessFunction;
 import com.example.security.streaming.serde.EventJsonDeserializer;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -74,19 +73,13 @@ public class AlertCorrelationJob {
         env.fromSource(rulesSource, WatermarkStrategy.noWatermarks(), "alert-rules")
             .broadcast(CorrelationProcessFunction.RULES_DESCRIPTOR);
 
-    var keyed =
-        events
-            .map(new KeyMapper())
-            .keyBy(KeyedEvent::key)
-            .map(KeyedEvent::event)
-            .keyBy(e -> e.tenantId().value() + "|*|*"); // placeholder — 실제로는 룰별로 다시 keyBy 필요
-
     // 본 job 의 핵심 — 룰 broadcast 와 keyed event stream 을 연결한 뒤 평가.
-    // 룰별로 별개 stream 을 갈래내려면 더 복잡 — 본 단순 버전은 모든 룰 / 그룹 키를 같은 operator
-    // 에서 처리하고 evaluator state 가 (ruleId → state) 보관.
+    // keyBy 시점에는 룰 / 그룹 키를 알 수 없다 (룰은 broadcast 채널로만 들어옴) → tenantId 로만
+    // keyBy 하고, CorrelationProcessFunction 이 broadcast 룰 전체를 순회하며 룰별 그룹 키 단위로
+    // RuleEvaluator state 를 fan-out 한다. 룰이 수만 개로 늘면 keyed 룰 분산 검토 (ADR-0008).
     var alertJsonStream =
         events
-            .keyBy(e -> e.tenantId().value() + "|*|*")
+            .keyBy(e -> e.tenantId().value())
             .connect(rules)
             .process(new CorrelationProcessFunction());
 
@@ -105,16 +98,6 @@ public class AlertCorrelationJob {
 
     env.execute("alert-correlation-job");
   }
-
-  static class KeyMapper implements MapFunction<LogEvent, KeyedEvent> {
-    @Override
-    public KeyedEvent map(LogEvent event) {
-      // 단일 키 — 실제 룰별 평가 구현은 broadcast 후 process function 안에서.
-      return new KeyedEvent(event.tenantId().value(), event);
-    }
-  }
-
-  record KeyedEvent(String key, LogEvent event) {}
 
   static class EventDeserializationSchema implements DeserializationSchema<LogEvent> {
     private transient EventJsonDeserializer deserializer;
