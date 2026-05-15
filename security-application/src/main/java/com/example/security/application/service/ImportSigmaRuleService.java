@@ -151,5 +151,7 @@ public class ImportSigmaRuleService
     if (!operator.canQueryOtherTenant() && !operator.tenantId().equals(tenant)) {
       throw new TenantMismatchException(operator.tenantId(), tenant);
     }
+    CrossTenantAccessAudit.recordIfCrossTenant(
+        audit, clock, operator, tenant, "sigma_rule", tenant.value());
   }
 }

@@ -76,10 +76,13 @@ public class ManageOpenSearchIndexService implements ManageOpenSearchIndexUseCas
    * 인덱스 admin 동작 (생성 / rollover / ILM 적용) 은 tenant ADMIN role 이상 + 본 tenant 또는
    * PLATFORM_ADMIN 이 다른 tenant 를 관리할 때만 허용.
    *
-   * <p>ISMS-P 2.6 (접근 통제) — function-level authorization 분리.
+   * <p>ISMS-P 2.6 (접근 통제) — function-level authorization 분리. PLATFORM_ADMIN 이 본인 외
+   * tenant 인덱스를 관리하면 cross-tenant access 로 audit 에 남긴다.
    */
-  private static void enforceAdmin(OperatorContext operator, TenantId tenant) {
+  private void enforceAdmin(OperatorContext operator, TenantId tenant) {
     if (operator.canQueryOtherTenant()) {
+      CrossTenantAccessAudit.recordIfCrossTenant(
+          audit, clock, operator, tenant, "index", tenant.value());
       return;
     }
     if (!operator.isAdmin()) {

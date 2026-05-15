@@ -97,6 +97,8 @@ public class DefineAlertRuleService implements DefineAlertRuleUseCase {
     if (!operator.canQueryOtherTenant() && !operator.tenantId().equals(tenant)) {
       throw new TenantMismatchException(operator.tenantId(), tenant);
     }
+    CrossTenantAccessAudit.recordIfCrossTenant(
+        audit, clock, operator, tenant, "alert_rule", tenant.value());
   }
 
   private void auditChange(AlertRule rule, OperatorContext operator, AuditAction action) {
