@@ -52,7 +52,7 @@ public class EvaluateAlertService implements EvaluateAlertUseCase {
             clock.instant(),
             "flink-job",
             "system",
-            AuditAction.ALERT_ACKNOWLEDGED, // dummy — 발화 자체는 시스템 동작
+            AuditAction.ALERT_FIRED,
             "alert",
             saved.alertId().toString(),
             null,
