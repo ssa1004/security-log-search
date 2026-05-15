@@ -98,7 +98,7 @@ public class IngestLogEventService implements IngestLogEventUseCase {
             clock.instant(),
             actor,
             "system",
-            AuditEntry.AuditAction.SEARCH, // dummy — INGEST audit 은 별도 action 추가 시 교체
+            AuditEntry.AuditAction.INGEST,
             "raw_event",
             eventId.toString(),
             null,
