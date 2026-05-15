@@ -28,9 +28,9 @@ dependencies {
     testImplementation("org.apache.flink:flink-streaming-java:$flinkVersion:tests")
 
     // Kafka source / sink connector.
-    compileOnly("org.apache.flink:flink-connector-kafka:3.2.0-1.18")
+    compileOnly("org.apache.flink:flink-connector-kafka:4.0.1-2.0")
     compileOnly("org.apache.flink:flink-connector-base:1.18.1")
-    testImplementation("org.apache.flink:flink-connector-kafka:3.2.0-1.18")
+    testImplementation("org.apache.flink:flink-connector-kafka:4.0.1-2.0")
     testImplementation("org.apache.flink:flink-connector-base:1.18.1")
 
     // JSON 직렬화 — Flink 기본은 POJO serializer 라 record / nested type 은 Jackson 권장.
