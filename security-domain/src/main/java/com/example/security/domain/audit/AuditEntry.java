@@ -22,6 +22,7 @@ import java.util.UUID;
  *   <li>ALERT_ACKNOWLEDGED / ALERT_RESOLVED / ALERT_FALSE_POSITIVE — 알람 처리
  *   <li>INDEX_ROLLOVER / ALIAS_SWAP — admin 인덱스 작업
  *   <li>TENANT_ONBOARDED / TENANT_DEACTIVATED — 테넌트 라이프사이클
+ *   <li>CROSS_TENANT_ACCESS — 플랫폼 관리자가 본인 외 tenant 데이터에 접근 (ISMS-P 2.6)
  * </ul>
  */
 public record AuditEntry(
@@ -62,6 +63,7 @@ public record AuditEntry(
     ILM_POLICY_APPLIED,
     TENANT_ONBOARDED,
     TENANT_DEACTIVATED,
+    CROSS_TENANT_ACCESS,
     LOGIN_OPERATOR,
     EXPORT_RESULTS
   }

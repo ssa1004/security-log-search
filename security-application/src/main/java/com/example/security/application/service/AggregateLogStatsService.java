@@ -34,6 +34,8 @@ public class AggregateLogStatsService implements AggregateLogStatsUseCase {
     if (!operator.canQueryOtherTenant() && !operator.tenantId().equals(query.tenantId())) {
       throw new TenantMismatchException(operator.tenantId(), query.tenantId());
     }
+    CrossTenantAccessAudit.recordIfCrossTenant(
+        audit, clock, operator, query.tenantId(), "stats", query.bucket().name());
     var result = statsPort.aggregate(query);
     audit.append(
         new AuditEntry(

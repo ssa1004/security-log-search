@@ -53,6 +53,8 @@ public class SearchLogEventsService implements SearchLogEventsUseCase {
   @Override
   public SearchResult search(SearchQuery query, OperatorContext operator) {
     enforceTenant(operator, query.tenantId());
+    CrossTenantAccessAudit.recordIfCrossTenant(
+        audit, clock, operator, query.tenantId(), "search", query.luceneQueryString());
 
     var tenant =
         tenants.findById(query.tenantId()).orElseThrow(() -> new TenantNotFoundException(query.tenantId()));
