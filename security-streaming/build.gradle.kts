@@ -11,7 +11,7 @@ plugins {
     `java-library`
 }
 
-val flinkVersion = "1.18.1"
+val flinkVersion = "2.2.1"
 
 dependencies {
     api(project(":security-domain"))
