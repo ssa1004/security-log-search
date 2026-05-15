@@ -7,6 +7,9 @@ plugins {
     java
     id("org.springframework.boot") version "3.4.13" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
+    // security-domain 은 Kotlin 으로 마이그레이션됨 — 도메인 모델만 Kotlin, 나머지 6 모듈은 Java 유지.
+    // 적용은 security-domain/build.gradle.kts 에서만. 버전은 Gradle 8.10 번들 Kotlin 과 정렬.
+    kotlin("jvm") version "1.9.24" apply false
 }
 
 allprojects {
