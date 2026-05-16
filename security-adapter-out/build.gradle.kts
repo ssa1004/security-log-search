@@ -2,8 +2,14 @@
 //                  + Kafka producer (events.normalized, alerts.fired)
 //                  + OpenSearch client (Java client 2.x)
 //                  + ClickHouse JDBC.
+//
+// Kotlin 마이그레이션 — entity / repository / mapper / 외부 client 모두 Kotlin. plugin.spring 은
+// @Repository / @Component 의 open 처리, plugin.jpa 는 @Entity 의 no-arg constructor 합성을 담당.
 plugins {
     `java-library`
+    kotlin("jvm")
+    kotlin("plugin.spring")
+    kotlin("plugin.jpa")
 }
 
 dependencies {
@@ -38,8 +44,22 @@ dependencies {
     // Tracing — Micrometer.
     implementation("io.micrometer:micrometer-tracing")
 
+    // Kotlin null-safety 와 호환되는 Jackson module — OpenSearch / ClickHouse / Kafka 직렬화 시
+    // Kotlin data class 의 nullability / default value 를 인식한다.
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.mockito:mockito-junit-jupiter")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.assertj:assertj-core")
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
