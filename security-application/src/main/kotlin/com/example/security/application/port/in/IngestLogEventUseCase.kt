@@ -10,7 +10,7 @@ import java.util.UUID
  */
 interface IngestLogEventUseCase {
 
-    fun ingest(raw: RawEvent, idempotencyKey: String): IngestResult
+    fun ingest(raw: RawEvent, idempotencyKey: String?): IngestResult
 
     /** 처리 결과. */
     @JvmRecord
