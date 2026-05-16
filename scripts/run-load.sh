@@ -30,7 +30,17 @@ K6_TOKEN_GLOBEX="${K6_TOKEN_GLOBEX:-}"
 K6_ALERT_TENANT="${K6_ALERT_TENANT:-acme}"
 WAIT_SECONDS="${WAIT_SECONDS:-60}"
 
+# k6 → Prometheus remote-write (optional). commerce-ops Prometheus 가 떠 있을 때
+# `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write` 를 export.
+K6_PROMETHEUS_RW_SERVER_URL="${K6_PROMETHEUS_RW_SERVER_URL:-}"
+K6_PROMETHEUS_RW_TREND_STATS="${K6_PROMETHEUS_RW_TREND_STATS:-p(95),p(99),min,max,avg}"
+K6_PROMETHEUS_RW_PUSH_INTERVAL="${K6_PROMETHEUS_RW_PUSH_INTERVAL:-5s}"
+SERVICE_TAG="security-log-search"
+
 echo "==> base url: $BASE_URL"
+if [[ -n "$K6_PROMETHEUS_RW_SERVER_URL" ]]; then
+    echo "==> k6 → Prometheus RW: $K6_PROMETHEUS_RW_SERVER_URL (service=$SERVICE_TAG)"
+fi
 
 # 1) healthcheck — actuator/health 가 UP 이 될 때까지 짧게 polling.
 echo
@@ -92,6 +102,8 @@ elif command -v docker >/dev/null 2>&1; then
     else
         BASE_URL_DOCKER="$BASE_URL"
     fi
+    K6_RW_URL_DOCKER="${K6_PROMETHEUS_RW_SERVER_URL//localhost/host.docker.internal}"
+    K6_RW_URL_DOCKER="${K6_RW_URL_DOCKER//127.0.0.1/host.docker.internal}"
     K6_EXEC=(docker run --rm -i \
         -v "${ROOT_DIR}/load/k6:/scripts:ro" \
         -e "BASE_URL=${BASE_URL_DOCKER}" \
@@ -99,6 +111,9 @@ elif command -v docker >/dev/null 2>&1; then
         -e "K6_TOKEN_ACME=${K6_TOKEN_ACME}" \
         -e "K6_TOKEN_GLOBEX=${K6_TOKEN_GLOBEX}" \
         -e "K6_ALERT_TENANT=${K6_ALERT_TENANT}" \
+        -e "K6_PROMETHEUS_RW_SERVER_URL=${K6_RW_URL_DOCKER}" \
+        -e "K6_PROMETHEUS_RW_TREND_STATS=${K6_PROMETHEUS_RW_TREND_STATS}" \
+        -e "K6_PROMETHEUS_RW_PUSH_INTERVAL=${K6_PROMETHEUS_RW_PUSH_INTERVAL}" \
         grafana/k6:0.50.0)
     SCRIPT_PREFIX="/scripts/scenarios"
     echo
@@ -119,17 +134,25 @@ run_scenario() {
     local out="${REPORT_DIR}/${name}.json"
     local rc=0
 
+    local rw_opts=()
+    if [[ -n "$K6_PROMETHEUS_RW_SERVER_URL" ]]; then
+        rw_opts=(-o "experimental-prometheus-rw" \
+                 --tag "service=${SERVICE_TAG}" \
+                 --tag "scenario=${name}")
+    fi
+
     if [[ "${K6_EXEC[0]}" == "k6" ]]; then
-        export BASE_URL K6_TOKEN K6_TOKEN_ACME K6_TOKEN_GLOBEX K6_ALERT_TENANT
+        export BASE_URL K6_TOKEN K6_TOKEN_ACME K6_TOKEN_GLOBEX K6_ALERT_TENANT \
+               K6_PROMETHEUS_RW_SERVER_URL K6_PROMETHEUS_RW_TREND_STATS K6_PROMETHEUS_RW_PUSH_INTERVAL
         set +e
-        "${K6_EXEC[@]}" run --summary-export="$out" "$file"
+        "${K6_EXEC[@]}" run "${rw_opts[@]}" --summary-export="$out" "$file"
         rc=$?
         set -e
     else
         local docker_file="${SCRIPT_PREFIX}/$(basename "$file")"
         local docker_out="/scripts/${name}.summary.json"
         set +e
-        "${K6_EXEC[@]}" run --summary-export="$docker_out" "$docker_file"
+        "${K6_EXEC[@]}" run "${rw_opts[@]}" --summary-export="$docker_out" "$docker_file"
         rc=$?
         set -e
         if [[ -f "${ROOT_DIR}/load/k6/${name}.summary.json" ]]; then
