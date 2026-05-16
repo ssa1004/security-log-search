@@ -220,8 +220,27 @@ iteration 안에 setup → publish → polling 의 누적 상태가 중요한 (�
 ## 결과 plot
 
 각 시나리오를 `--out json=build/k6-reports/<name>.json` 으로 떨궈서 dashboard 에 올릴 수
-있다. `commerce-ops` 의 Prometheus remote-write 와 연동하면 `k6 → Prom →
-Grafana` 도 가능 — `--out experimental-prometheus-rw=http://prom:9090/api/v1/write`.
+있다.
+
+## Prometheus remote-write 연동 (commerce-ops 통합 대시보드)
+
+5 시나리오 결과를 `commerce-ops` 의 Prometheus 로 흘려보내 한 Grafana 대시보드에서
+client load + SIEM 의 server actuator metric 을 같이 보고 싶을 때:
+
+```bash
+docker compose -f /path/to/commerce-ops/infra/docker-compose.yml up -d prometheus grafana
+
+export K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write
+./scripts/run-load.sh
+```
+
+`run-load.sh` 가 각 시나리오에 `service=security-log-search` / `scenario=<name>` tag 를
+자동 부여한다. Grafana → **Portfolio Load (k6 + actuator)** 대시보드 (uid
+`portfolio-load`) 에서 service 변수를 `security-log-search` 로 선택. 12번 패널
+"tenant_leak_count" 가 빨간색으로 잡히면 multi-tenant-isolation 의 격리 invariant 가
+깨진 신호 (5분 윈도우 leak/5m > 0). 필요 k6 버전 **0.42+** (experimental-prometheus-rw output).
+
+## 더 나아가려면
 
 더 큰 부하는 k6 cloud / k6 distributed mode 가 필요 — 본 시나리오는 single-node 기준
 이라 VU 수십 ~ 수백 선에서 운용한다. log-ingest 의 2000 req/s 도 OpenSearch / Kafka /
