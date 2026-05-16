@@ -13,9 +13,9 @@ data class SigmaImportResponse(
     @JvmRecord
     data class RuleSummary(
         val alertRuleId: UUID,
-        val sigmaId: String,
+        val sigmaId: String?,
         val title: String,
-        val level: String,
+        val level: String?,
     )
 
     @JvmRecord
