@@ -2,8 +2,11 @@
 //
 // 모든 테스트가 @Tag("integration") 으로 마킹되어 있어 기본 ./gradlew test 에서 제외됩니다.
 // 실행: ./gradlew :e2e-tests:integrationTest (Docker 필요)
+//
+// Kotlin 마이그레이션 — 통합 시나리오 테스트도 Kotlin.
 plugins {
     `java-library`
+    kotlin("jvm")
 }
 
 dependencies {
@@ -26,4 +29,14 @@ dependencies {
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.assertj:assertj-core")
     testImplementation("org.awaitility:awaitility:4.2.2")
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
