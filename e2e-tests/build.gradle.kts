@@ -28,7 +28,7 @@ dependencies {
     testImplementation("org.opensearch:opensearch-testcontainers:2.1.2")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.assertj:assertj-core")
-    testImplementation("org.awaitility:awaitility:4.2.2")
+    testImplementation("org.awaitility:awaitility:4.3.0")
 }
 
 kotlin {

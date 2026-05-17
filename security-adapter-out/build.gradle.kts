@@ -29,14 +29,14 @@ dependencies {
     implementation("org.opensearch.client:opensearch-rest-client:2.18.0")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("jakarta.json:jakarta.json-api:2.1.3")
-    runtimeOnly("org.eclipse.parsson:parsson:1.1.6")
+    runtimeOnly("org.eclipse.parsson:parsson:1.1.7")
 
     // ClickHouse JDBC — aggregate / 시계열 query.
-    implementation("com.clickhouse:clickhouse-jdbc:0.6.5:all")
-    implementation("com.clickhouse:clickhouse-http-client:0.6.5")
+    implementation("com.clickhouse:clickhouse-jdbc:0.9.8:all")
+    implementation("com.clickhouse:clickhouse-http-client:0.9.8")
 
     // Resilience4j — 외부 호출 보호 (CB + Retry + Bulkhead). (ADR-0009 참고)
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.4.0")
 
     // Messaging — Kafka producer / consumer.
     implementation("org.springframework.kafka:spring-kafka")
