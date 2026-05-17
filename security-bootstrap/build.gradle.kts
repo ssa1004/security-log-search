@@ -1,6 +1,11 @@
 // Bootstrap — Spring Boot main + application.yml + Flyway 마이그레이션.
+//
+// Kotlin 마이그레이션 — main + @Configuration / @Bean wiring 까지 Kotlin. plugin.spring 이
+// @Configuration / @SpringBootApplication class 를 자동 open 처리 → Spring proxy / CGLIB 정상 동작.
 plugins {
     java
+    kotlin("jvm")
+    kotlin("plugin.spring")
     id("org.springframework.boot")
     id("io.spring.dependency-management")
 }
@@ -29,6 +34,17 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
+}
+
+kotlin {
+    // Java toolchain 과 동일하게 JVM 21.
+    jvmToolchain(21)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
 
 springBoot {
