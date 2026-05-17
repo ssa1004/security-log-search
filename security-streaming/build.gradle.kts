@@ -7,8 +7,13 @@
 // 의존성 격리:
 // - Spring Boot starter, OpenSearch / ClickHouse client 같은 무거운 의존성은 끌어오지 않음
 // - Kafka client 는 Flink connector 가 자체적으로 가져옴 → spring-kafka 와 충돌 방지
+//
+// Kotlin 마이그레이션 — Flink ProcessFunction / serde 까지 Kotlin. Flink 직렬화는 Kotlin class
+// (extends Java generic) 와 일반 class + Serializable 조합으로 보존된다. plugin.spring 은 필요 X
+// (Flink runtime 은 Spring proxy 사용 안 함).
 plugins {
     `java-library`
+    kotlin("jvm")
 }
 
 val flinkVersion = "1.18.1"
@@ -40,6 +45,16 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.assertj:assertj-core")
     testImplementation("org.junit.jupiter:junit-jupiter")
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
 
 // Flink + Java 17+ 모듈 시스템 — Kryo serializer 가 java.util / java.lang 의 private field 접근.
