@@ -108,8 +108,10 @@ class IngestSearchIntegrationTest {
         assertThat(result.hits).isEmpty()
     }
 
+    // @Configuration 클래스는 Spring 이 CGLIB 로 subclass 해 @Bean 메서드를 가로채므로 open 이어야
+    // 한다. e2e-tests 모듈은 kotlin("plugin.spring") 를 적용하지 않아 자동 open 처리가 안 된다.
     @Configuration
-    class TestConfig {
+    open class TestConfig {
         // 추후 OpenSearch / ClickHouse 컨테이너 추가 시 여기서 ServiceConnection 정의.
     }
 
