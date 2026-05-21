@@ -5,6 +5,7 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.kafka.KafkaConnectionDetails
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.annotation.EnableKafka
@@ -22,6 +23,11 @@ import org.springframework.kafka.listener.ContainerProperties
  * 핵심 (ADR-0009 backpressure):
  * - producer: enable.idempotence + acks=all + 압축
  * - consumer: max-poll-records 튜닝으로 backpressure 조절
+ *
+ * bootstrap-servers 는 [KafkaConnectionDetails] 로 주입받는다. Spring Boot 가 항상 이 빈을
+ * 제공하므로 (일반 실행 시 spring.kafka.bootstrap-servers 기반 PropertiesKafkaConnectionDetails,
+ * Testcontainers `@ServiceConnection` 사용 시 컨테이너 주소 기반 빈) `@Value` 로 raw 프로퍼티를
+ * 직접 읽으면 `@ServiceConnection` 이 wire 한 주소를 못 본다.
  */
 @Configuration
 @EnableKafka
@@ -29,10 +35,10 @@ class KafkaConfig {
 
     @Bean
     fun producerFactory(
-        @Value("\${spring.kafka.bootstrap-servers:localhost:9092}") bootstrap: String,
+        connectionDetails: KafkaConnectionDetails,
     ): ProducerFactory<String, String> {
         val props: MutableMap<String, Any> = HashMap()
-        props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrap
+        props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = connectionDetails.producerBootstrapServers
         props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
         props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
         props[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = true
@@ -50,11 +56,11 @@ class KafkaConfig {
 
     @Bean
     fun consumerFactory(
-        @Value("\${spring.kafka.bootstrap-servers:localhost:9092}") bootstrap: String,
+        connectionDetails: KafkaConnectionDetails,
         @Value("\${security.kafka.consumer.max-poll-records:200}") maxPollRecords: Int,
     ): ConsumerFactory<String, String> {
         val props: MutableMap<String, Any> = HashMap()
-        props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrap
+        props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = connectionDetails.consumerBootstrapServers
         props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = false
