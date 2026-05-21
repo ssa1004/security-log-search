@@ -100,7 +100,7 @@ YAML 을 한 번에 import 가능 (한 파일 = 한 batch).
 
 ### Sigma 룰을 그대로 native 실행 (별도 Sigma 엔진)
 검토 — `pySigma` 같은 Python 엔진을 사이드카로 띄우면 가능하지만:
-- Java 시스템에 Python 의존 추가
+- JVM 시스템에 Python 의존 추가
 - Sigma 엔진 자체의 성능 / 가시성 통제 불편
 - 자체 룰 DSL 과 Sigma 엔진 두 시스템이 공존 → 운영 일관성 깨짐
 
