@@ -19,12 +19,12 @@ ApplicationSet 컨트롤러가 본 manifest 를 보고 다음 3개의 Applicatio
 ## values 파일 구조
 
 ```
-infrastructure/helm/security-log-search/
+helm/security-log-search/
 ├── Chart.yaml
 ├── values.yaml              ← 공통 default
 ├── values-dev.yaml          ← dev override (replicas=1, autoscaling off)
 ├── values-staging.yaml      ← staging override (replicas=2)
-└── values-prod.yaml         ← prod override (replicas=5, ingress + cert-manager)
+└── values-prod.yaml         ← prod override (replicas=3, ingress + cert-manager)
 ```
 
 ## 새 환경 추가
