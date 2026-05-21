@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/ssa1004/security-log-search/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ssa1004/security-log-search/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
+[![Kotlin 1.9](https://img.shields.io/badge/Kotlin-1.9-7F52FF.svg?logo=kotlin)](https://kotlinlang.org/)
+[![JVM 21](https://img.shields.io/badge/JVM-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F.svg?logo=springboot)](https://spring.io/projects/spring-boot)
 [![Apache Flink 1.18](https://img.shields.io/badge/Apache%20Flink-1.18.1-E6526F.svg?logo=apacheflink)](https://flink.apache.org/)
 [![OpenSearch 2.x](https://img.shields.io/badge/OpenSearch-2.x-005EB8.svg?logo=opensearch)](https://opensearch.org/)
@@ -145,7 +146,7 @@ sequenceDiagram
 
 ## 기술 스택
 
-- **Language**: Java 21 (virtual threads on)
+- **Language**: Kotlin 1.9 (JVM 21 toolchain, virtual threads on)
 - **Framework**: Spring Boot 3.4
 - **Storage**:
   - PostgreSQL 16 (control plane: tenants / alert_rules / alerts / audit_entries / idempotency)

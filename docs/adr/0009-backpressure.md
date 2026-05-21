@@ -45,11 +45,11 @@ upstream operator 가 자동으로 poll 을 멈춤. monitoring 으로 어디서 
 
 ### OpenSearch / ClickHouse 호출 보호
 
-```java
+```kotlin
 @CircuitBreaker(name = "opensearch")
 @Retry(name = "opensearch")
 @Bulkhead(name = "opensearch")
-public SearchResult search(SearchQuery query) { ... }
+override fun search(query: SearchQuery): SearchResult { ... }
 ```
 
 Resilience4j 설정:
