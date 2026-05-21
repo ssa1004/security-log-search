@@ -51,7 +51,14 @@ subprojects {
         "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
     }
 
+    // 모든 Test task 공통 — JUnit Platform 사용.
     tasks.withType<Test> {
+        useJUnitPlatform()
+    }
+
+    // 기본 test task 만 통합 테스트 제외. withType<Test> 로 묶으면 integrationTest 까지
+    // excludeTags 가 적용돼 includeTags("integration") 를 덮어써 0 개 테스트가 돌게 된다.
+    tasks.named<Test>("test") {
         useJUnitPlatform {
             // 단위 테스트만 실행 — Testcontainers 를 쓰는 통합 테스트는 별도 task 로 격리.
             excludeTags("integration")
