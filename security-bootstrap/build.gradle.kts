@@ -18,6 +18,11 @@ dependencies {
     implementation(project(":security-adapter-in"))
     implementation(project(":security-adapter-out"))
 
+    // kotlin-reflect — Spring Data JPA 가 Kotlin @Entity data class 의 primary constructor 를
+    // kotlin.reflect 로 탐색한다. kotlin.jvm 플러그인은 stdlib 만 classpath 에 올리므로 명시 필요.
+    // 누락 시 컨텍스트 부팅에서 NoClassDefFoundError: kotlin/reflect/full/KClasses.
+    implementation(kotlin("reflect"))
+
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.kafka:spring-kafka")
