@@ -291,11 +291,11 @@ ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매
 
 ### Helm chart
 
-운영 / 스테이징 배포는 `infrastructure/helm/security-log-search/` 의 Helm chart 로 합니다
+운영 / 스테이징 배포는 `helm/security-log-search/` 의 Helm chart 로 합니다
 (Helm 3.x). env 별 override 는 `values-dev.yaml` / `values-staging.yaml` / `values-prod.yaml`.
 
 ```bash
-cd infrastructure/helm/security-log-search
+cd helm/security-log-search
 
 # dev — replica 1, NetworkPolicy / HPA / Ingress 비활성
 helm install slq . --namespace security-log-search --create-namespace \
@@ -319,7 +319,7 @@ chart 가 만드는 리소스:
 - ServiceMonitor (Prometheus Operator)
 
 자세한 키 / env 별 차이 / SIEM 특성 (멀티테넌트 / admin 분리 / 외부 cluster 가정) 은
-[infrastructure/helm/security-log-search/README.md](infrastructure/helm/security-log-search/README.md)
+[helm/security-log-search/README.md](helm/security-log-search/README.md)
 참고.
 
 > OpenSearch / ClickHouse / PostgreSQL / Kafka / Redis 는 외부 cluster 를 가정합니다.
@@ -346,7 +346,7 @@ chart 가 만드는 리소스:
 
 ## Portfolio Set 통합
 
-본 repo 는 단독으로도 동작하지만, 다음 8개 repo 가 한 시스템처럼 맞물리는 portfolio set 의
+본 repo 는 단독으로도 동작하지만, 다음 10개 repo 가 한 시스템처럼 맞물리는 portfolio set 의
 한 축입니다. 프로필 README — <https://github.com/ssa1004/ssa1004> — 에 전체 그림이 있습니다.
 
 | repo | 역할 | 본 repo 와의 관계 |
@@ -358,6 +358,8 @@ chart 가 만드는 리소스:
 | [bid-ask-marketplace](https://github.com/ssa1004/bid-ask-marketplace) | 리셀 주문장 | 매칭 엔진의 app log 를 본 repo 가 수집 |
 | [gpu-job-orchestrator](https://github.com/ssa1004/gpu-job-orchestrator) | GPU 학습 job 스케줄링 | K8s audit log 를 본 repo 가 ECS 매핑 후 수집 (ADR-0014) |
 | [commerce-ops](https://github.com/ssa1004/commerce-ops) | OTel / Prometheus / Loki 플레이그라운드 | observability stack 공통 — 본 repo 의 Grafana dashboard 가 같은 패턴 |
+| [realtime-feed-service](https://github.com/ssa1004/realtime-feed-service) | 실시간 호가 / 체결 feed 를 WebSocket / SSE 로 fan-out | feed 서버의 application log 를 본 repo 가 수집 |
+| [graphql-gateway](https://github.com/ssa1004/graphql-gateway) | 여러 service 의 REST API 를 한 GraphQL endpoint 로 묶음 | gateway 의 access log 를 본 repo 가 수집 |
 | **security-log-search** | 본 repo — SIEM 수집 / 검색 / 알람 | — |
 
 본 repo 의 통합점은 세 방향:

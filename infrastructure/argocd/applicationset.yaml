@@ -34,7 +34,7 @@ spec:
       source:
         repoURL: https://github.com/ssa1004/security-log-search
         targetRevision: main
-        path: infrastructure/helm/security-log-search
+        path: helm/security-log-search
         helm:
           releaseName: security-log-search
           valueFiles:
