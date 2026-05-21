@@ -180,20 +180,20 @@ OWASP API 통제와 ISMS-P 통제는 다음과 같이 매핑된다 (자세한 �
 | 2.9 감사 / 추적 | API6 (Sensitive Flow) — 모든 운영자 행동 audit 기록 |
 | 3.1 / 3.4 개인정보 보호 | API3 (Object Property) — `PiiMasker` |
 
-## 발견 이슈 (2026-05-13)
+## 통제 강화 내역
 
-본 sweep 에서 발견 + fix 한 항목:
+위 매핑을 구현하면서 적용한 주요 강화 항목 — 회귀 테스트로 고정한다.
 
-1. **API5** — `ManageOpenSearchIndexService` 의 admin endpoint (createInitialIndex / triggerRollover / applyIlmPolicy) 가 role 검증 없음 → `enforceAdmin` 추가 (`ADMIN` role 필수, 본 tenant 또는 PLATFORM_ADMIN). 회귀 테스트 `ManageOpenSearchIndexServiceTest` 추가.
-2. **API5** — `OnboardTenantService.onboard` / `deactivate` 가 role 검증 없음 → `enforcePlatformAdmin` 추가 (`PLATFORM_ADMIN` role 필수). 회귀 테스트 `OnboardTenantServiceTest` 추가.
-3. **API4** — `QueryAuditLogUseCase.AuditQuery.size` upper bound 없음 → `MAX_SIZE = 1000` 강제. `AuditController` 에서 `@Min/@Max` + `@Validated`.
-4. **API4** — `ListAlertsUseCase.ListAlertsQuery.size` upper bound 없음 → `MAX_SIZE = 500` 강제. `AlertController` 에서 `@Min/@Max` + `@Validated`.
-5. **API4** — `StatsController.topN` upper bound 없음 → `@Min(1) @Max(1000)` + `@Validated`.
-6. **API4** — `SigmaImportRequest.yaml` 크기 상한 없음 → `@Size(max=5MB)` 추가.
-7. **API4** — HTTP 본문 상한 명시 → `server.tomcat.max-http-form-post-size=5MB`.
+1. **API5** — `ManageOpenSearchIndexService` 의 admin endpoint (createInitialIndex / triggerRollover / applyIlmPolicy) 는 `enforceAdmin` 으로 `ADMIN` role 을 강제한다 (본 tenant 또는 PLATFORM_ADMIN). 회귀 테스트 `ManageOpenSearchIndexServiceTest`.
+2. **API5** — `OnboardTenantService.onboard` / `deactivate` 는 `enforcePlatformAdmin` 으로 `PLATFORM_ADMIN` role 을 강제한다. 회귀 테스트 `OnboardTenantServiceTest`.
+3. **API4** — `QueryAuditLogUseCase.AuditQuery.size` 는 `MAX_SIZE = 1000` 으로 상한을 둔다. `AuditController` 에서 `@Min/@Max` + `@Validated`.
+4. **API4** — `ListAlertsUseCase.ListAlertsQuery.size` 는 `MAX_SIZE = 500` 으로 상한을 둔다. `AlertController` 에서 `@Min/@Max` + `@Validated`.
+5. **API4** — `StatsController.topN` 은 `@Min(1) @Max(1000)` + `@Validated` 로 상한을 둔다.
+6. **API4** — `SigmaImportRequest.yaml` 은 `@Size(max=5MB)` 로 본문 크기를 제한한다.
+7. **API4** — HTTP 본문 상한은 `server.tomcat.max-http-form-post-size=5MB` 로 명시한다.
 
-`InsufficientPrivilegeException` (HTTP 403 `insufficient_privilege`) 신설 — function-level
-authorization 실패 시 일관된 응답.
+function-level authorization 실패는 `InsufficientPrivilegeException` (HTTP 403
+`insufficient_privilege`) 으로 일관되게 응답한다.
 
 ## 운영 시 다시 검토할 시점
 

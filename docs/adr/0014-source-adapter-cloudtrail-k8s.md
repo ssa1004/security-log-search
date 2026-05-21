@@ -35,13 +35,13 @@ Filebeat 등 일부에 한정).
 
 ```
 mapping/
-  EventNormalizer.java        ← 인터페이스
-  EcsNormalizer.java          ← ECS dotted notation 입력
-  OcsfNormalizer.java         ← OCSF → ECS
-  RoutingNormalizer.java      ← schema 힌트로 라우팅
+  EventNormalizer.kt          ← 인터페이스
+  EcsNormalizer.kt            ← ECS dotted notation 입력
+  OcsfNormalizer.kt           ← OCSF → ECS
+  RoutingNormalizer.kt        ← schema 힌트로 라우팅
   source/
-    CloudTrailToEcsMapper.java
-    K8sAuditToEcsMapper.java
+    CloudTrailToEcsMapper.kt
+    K8sAuditToEcsMapper.kt
 ```
 
 ### schema 힌트 = source 식별자
@@ -120,7 +120,7 @@ severity 는 outcome + verb + HTTP code 조합으로 결정 (401/403 → HIGH, 5
   바로 받음. 클라이언트 측 변환 부담 0.
 - ECS 1차 모델은 그대로 유지 — 검색 / 룰 / 대시보드 / OpenSearch 매핑 변경 0.
 - 매퍼는 도메인 layer (`security-domain`) 에 둬서 외부 framework 의존성 0. 단위 테스트가
-  순수 Java 로 빠르게 돌아감.
+  framework 없이 빠르게 돌아감.
 
 ## 단점
 

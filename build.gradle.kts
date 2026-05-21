@@ -9,8 +9,8 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7" apply false
     // OpenAPI spec build-time export — 실제 적용은 security-bootstrap 모듈.
     id("org.springdoc.openapi-gradle-plugin") version "1.9.0" apply false
-    // domain / application / adapter 가 Kotlin. 적용은 각 모듈 build.gradle.kts 에서만.
-    // 버전은 Gradle 8.10 번들 Kotlin 과 정렬.
+    // 전 모듈 (domain / application / adapter / streaming / bootstrap / e2e) 이 Kotlin.
+    // 적용은 각 모듈 build.gradle.kts 에서만. 버전은 Gradle 8.10 번들 Kotlin 과 정렬.
     kotlin("jvm") version "1.9.24" apply false
     // plugin.spring — @Component / @Controller / @Service 등 Spring 어노테이션 class 를 자동
     //                  open 처리해 CGLIB proxy 가능하게 한다. adapter-in / adapter-out 에 적용.

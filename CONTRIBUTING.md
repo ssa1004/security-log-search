@@ -74,7 +74,7 @@ Testcontainers 통합 테스트는 Docker 미가용 환경에서는 자동 skip 
 
 ## 코드 스타일
 
-- Java: Google Java Format 또는 IntelliJ default.
+- Kotlin: ktlint 또는 IntelliJ Kotlin 기본 스타일 (`.editorconfig` 준수).
 - 주석 / 문서는 자연스러운 한국어 (영어 직역체 지양).
 - 전문 용어 옆에 짧은 한국어 풀이를 함께 적습니다 (예: ECS — Elastic Common Schema, 보안 /
   관측 로그 표준).
