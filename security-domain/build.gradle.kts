@@ -10,7 +10,6 @@ plugins {
 
 dependencies {
     // Domain 은 외부 framework 의존성 금지. JSR-310 (java.time) + Kotlin stdlib 만 사용.
-    // Lombok 은 root build.gradle.kts 에서 공통 적용 (Kotlin 코드에는 미적용).
 
     testImplementation(platform("org.junit:junit-bom:5.10.5"))
     testImplementation("org.junit.jupiter:junit-jupiter")
