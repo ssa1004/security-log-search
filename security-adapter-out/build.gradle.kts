@@ -25,8 +25,8 @@ dependencies {
     // OpenSearch Java Client 2.x — Spring Data Elasticsearch 대신 low-level client.
     // OpenSearch 의 query DSL / index template / ILM 호출이 더 정확. (ADR-0002, ADR-0006 참고)
     // java client 와 rest client 는 동일 라인으로 정렬 — 2.10 ↔ 2.18 mismatch 시 transport 호환성 이슈.
-    implementation("org.opensearch.client:opensearch-java:2.18.0")
-    implementation("org.opensearch.client:opensearch-rest-client:2.18.0")
+    implementation("org.opensearch.client:opensearch-java:3.6.0")
+    implementation("org.opensearch.client:opensearch-rest-client:3.6.0")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("jakarta.json:jakarta.json-api:2.1.3")
     runtimeOnly("org.eclipse.parsson:parsson:1.1.6")
