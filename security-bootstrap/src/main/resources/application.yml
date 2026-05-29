@@ -22,7 +22,9 @@ spring:
     enabled: true
     locations: classpath:db/migration
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    # 호스트 실행(bootRun) 기본값은 compose 의 EXTERNAL listener(localhost:29092).
+    # 컨테이너끼리는 KAFKA_BOOTSTRAP=kafka:9092 로 override (compose / k8s).
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:29092}
 
 server:
   port: 8080
