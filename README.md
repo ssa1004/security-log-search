@@ -163,6 +163,20 @@ sequenceDiagram
 
 ## 빠른 실행
 
+> `make help` 로 전체 명령을 볼 수 있습니다. 가장 빠른 길:
+> ```bash
+> make up                # 인프라 기동 (Postgres/Kafka/OpenSearch/ClickHouse/Flink)
+> make run               # 다른 셸에서 Spring Boot 앱 (:8080)
+> make seed              # 데모 tenant + 기본 룰 시드
+> make demo              # Sigma import → 트리거 이벤트 → alert 흐름
+> open http://localhost:5601    # OpenSearch Dashboards
+> ```
+>
+> **Kafka listener**: 호스트에서 `make run` (`./gradlew bootRun`) 으로 띄운 앱은
+> `localhost:29092` 로, 컨테이너끼리는 `kafka:9092` 로 붙습니다 (compose 의 EXTERNAL/PLAINTEXT
+> 두 listener). 그래서 앱의 dev 기본 `KAFKA_BOOTSTRAP` 도 `localhost:29092` 입니다 — 단일
+> listener (`kafka:9092`) 면 호스트가 `kafka` 호스트명을 못 풀어 producer 가 무한 대기/실패합니다.
+
 ### 단위 테스트만
 
 ```bash
@@ -251,6 +265,10 @@ ISMS-P 인증 요구를 본 시스템 안에서 어떻게 구현했는지의 매
 - 2.10 (사고 대응) → Flink correlation rule + alert workflow
 
 ## ADR 인덱스
+
+> 이 레포의 패턴(검색 / OLAP / 스트리밍 / 멀티테넌시 / ISMS-P)을 "코드 → ADR → 이론"으로 잇는
+> 학습 진입점은 [docs/backend-skills-index.md](docs/backend-skills-index.md) 참고
+> (짝 레포 [dev-lab](https://github.com/ssa1004/dev-lab) 의 이론과 연결).
 
 | ADR | 제목 |
 |---|---|
