@@ -136,7 +136,7 @@ sequenceDiagram
         Svc->>OS: GET events-acme-read/_search
         Note over OS: alias 가 acme 인덱스만 가리킴 (1)
     and ClickHouse 경로
-        Svc->>CH: SET tenant_id='acme'; SELECT ...
+        Svc->>CH: SET tenant_id='acme' 후 SELECT ...
         Note over CH: Row Policy 가 tenant_id 일치 행만 (2)
     end
     Note over U,CH: 다른 tenant (globex) 인덱스 / 행은<br/>4 layer 모두에서 차단됨
@@ -414,7 +414,7 @@ sequenceDiagram
     par OpenSearch
         Svc->>OS: GET events-acme-read/_search
     and ClickHouse
-        Svc->>CH: SET tenant_id='acme'; SELECT ...
+        Svc->>CH: SET tenant_id='acme' 후 SELECT ...
     end
     Svc-->>API: hits + facets
     API-->>Caller: 200 OK (다른 tenant 데이터 0건 보장)
