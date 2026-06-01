@@ -37,7 +37,7 @@ dependencies {
     implementation("org.opensearch.client:opensearch-java:2.18.0")
     implementation("org.opensearch.client:opensearch-rest-client:2.18.0")
     // OpenSearch transport 가 의존하는 httpcore5 — Spring Boot 가 직접 관리하지 않음.
-    implementation("org.apache.httpcomponents.core5:httpcore5:5.2.5")
+    implementation("org.apache.httpcomponents.core5:httpcore5:5.4.2")
     implementation("com.clickhouse:clickhouse-jdbc:0.6.5:all")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
