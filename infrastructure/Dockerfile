@@ -1,5 +1,5 @@
 # --- build stage ---
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine-3.23 AS builder
 WORKDIR /workspace
 
 # Gradle wrapper + 빌드 스크립트만 먼저 복사 — 의존성 캐시 hit 향상
@@ -23,7 +23,9 @@ COPY security-bootstrap security-bootstrap
 RUN ./gradlew --no-daemon :security-bootstrap:bootJar -x test
 
 # --- runtime stage ---
-FROM eclipse-temurin:21-jre-alpine
+# Alpine 3.23 핀 — floating alpine 태그가 패치 이전 이미지를 가리켜 openssl/libcrypto3/libssl3
+# 3.5.6-r0 (CVE-2026-45447, HIGH) 가 노출됐다. 3.23 은 패치된 openssl 3.5.7-r0 를 포함한다.
+FROM eclipse-temurin:21-jre-alpine-3.23
 WORKDIR /app
 
 # 보안 — non-root user
