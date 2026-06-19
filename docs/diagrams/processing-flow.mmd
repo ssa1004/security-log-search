@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    participant Src as Firewall / EDR / Syslog
+    participant API as REST Ingest API
+    participant Norm as ECS / OCSF Mapper
+    participant K as Kafka (events.normalized)
+    participant OS as OpenSearch
+    participant CH as ClickHouse
+    participant Flink as Flink Job
+    participant DB as PostgreSQL (control plane)
+    participant Op as Operator
+
+    Src->>API: POST /events (raw, idempotency-key)
+    API->>Norm: normalize + tenant validation
+    Norm->>K: publish events.normalized
+    par dual sink
+        K-->>OS: index events-{tenant}-write alias
+    and
+        K-->>CH: insert into events_raw (with tenant_id)
+    end
+    K-->>Flink: source
+    Flink->>Flink: KeyedProcessFunction + MapState (sliding window)
+    Flink->>K: alerts.fired (rule matched)
+    K-->>DB: INSERT alerts row + audit_entries
+    Op->>API: POST /search (Lucene query + filter + facet)
+    API->>OS: query events-{tenant}-read alias (tenantId forced)
+    Op->>API: GET /stats (time-series aggregation)
+    API->>CH: SELECT ... FROM events_5m_mv (pre-aggregated MV)

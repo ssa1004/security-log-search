@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    participant Src as Ingest source
+    participant API as security-log-search ingest API
+    participant K as Kafka (events.normalized / alerts.fired)
+    participant Flink as Flink correlation job
+    participant Hub as notification-hub (consumer)
+    participant Op as Operator
+
+    Src->>API: POST /api/v1/events (raw)
+    API->>K: publish events.normalized
+    K-->>Flink: source
+    Flink->>Flink: Sigma-derived rule + threshold eval (KeyedProcessFunction + MapState)
+    Flink->>K: publish alerts.fired
+    par this repo consumer
+        K-->>API: INSERT alerts row + audit_entries
+    and external consumer
+        K-->>Hub: alerts.fired consume
+        Hub->>Op: per-channel fan-out (email / Slack / SMS)
+        Hub->>K: notification.delivered (result)
+        K-->>API: re-ingested for audit
+    end
