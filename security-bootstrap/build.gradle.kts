@@ -78,3 +78,21 @@ openApi {
     outputFileName.set("security-log-search.yaml")
     waitTimeInSeconds.set(120)
 }
+
+// springdoc-openapi-gradle-plugin 의 forkedSpringBootRun 이 의존 모듈 jar 산출물을 명시적
+// 의존성 없이 사용해 Gradle 8 validation 이 실패하던 문제 수정 — 각 모듈 jar 를 mustRunAfter
+// 로 묶어 task graph 를 정합하게 만든다 (implicit_dependency validation 통과).
+tasks.matching { it.name == "forkedSpringBootRun" }.configureEach {
+    mustRunAfter(
+        ":security-domain:jar",
+        ":security-application:jar",
+        ":security-adapter-in:jar",
+        ":security-adapter-out:jar",
+    )
+    dependsOn(
+        ":security-domain:jar",
+        ":security-application:jar",
+        ":security-adapter-in:jar",
+        ":security-adapter-out:jar",
+    )
+}

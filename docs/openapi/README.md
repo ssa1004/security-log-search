@@ -1,5 +1,13 @@
 # OpenAPI spec
 
+> **English summary.** The OpenAPI 3 spec for the REST API is exported at build time by the
+> `generateOpenApiDocs` Gradle task (springdoc-openapi-gradle-plugin), which boots the app and
+> fetches `/v3/api-docs.yaml`. Booting the app needs the backing infra reachable
+> (PostgreSQL/H2 + Kafka), so the spec is **generated in CI with service containers**, not
+> hand-written, and is **not committed when infra is unavailable** (e.g. Docker down). Run
+> `./gradlew :security-bootstrap:generateOpenApiDocs` with the compose stack up to produce
+> `security-log-search.yaml` here. Korean details below.
+
 `security-log-search` 의 REST API 를 OpenAPI 3 spec 으로 build-time export 한다.
 
 ## 무엇이 들어가나
