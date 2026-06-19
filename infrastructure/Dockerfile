@@ -28,6 +28,11 @@ RUN ./gradlew --no-daemon :security-bootstrap:bootJar -x test
 FROM eclipse-temurin:21-jre-alpine-3.23
 WORKDIR /app
 
+# OS 패치 — 태그 핀(3.23)만으로는 패치 이전 레이어가 그대로 남아 openssl/libcrypto3/libssl3
+# 3.5.6-r0 (CVE-2026-45447, HIGH) 가 노출됐다. 빌드 시점에 apk upgrade 로 패치된
+# openssl 3.5.7-r0 를 끌어와 fixable HIGH/CRITICAL 을 제거한다.
+RUN apk upgrade --no-cache
+
 # 보안 — non-root user
 RUN addgroup -S app && adduser -S app -G app
 USER app
