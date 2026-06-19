@@ -5,7 +5,7 @@
 // 같은 의존성은 각 모듈 build.gradle.kts 에서 명시적으로만 선언합니다.
 plugins {
     java
-    id("org.springframework.boot") version "3.5.15" apply false
+    id("org.springframework.boot") version "4.1.0" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
     // OpenAPI spec build-time export — 실제 적용은 security-bootstrap 모듈.
     id("org.springdoc.openapi-gradle-plugin") version "1.9.0" apply false
@@ -70,7 +70,7 @@ subprojects {
 
     the<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension>().apply {
         imports {
-            mavenBom("org.springframework.boot:spring-boot-dependencies:3.5.15")
+            mavenBom("org.springframework.boot:spring-boot-dependencies:4.1.0")
         }
     }
 
