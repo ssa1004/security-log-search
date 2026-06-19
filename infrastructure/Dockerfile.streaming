@@ -1,7 +1,7 @@
 # Flink job 빌드용 — 별도 jar (Spring Boot 미포함). Flink 클러스터에 submit 한다.
 
 # --- build stage ---
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine-3.23 AS builder
 WORKDIR /workspace
 
 COPY gradle gradle
