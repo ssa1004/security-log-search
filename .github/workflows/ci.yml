@@ -1,14 +1,13 @@
 name: Security Log Search CI
 
-# 현재 단계에서는 push / PR trigger 를 잠시 OFF 하고 수동 trigger 만 유지합니다.
-# 자동 trigger 복원 시 아래 push / pull_request 블록 주석 해제.
+# push / PR / 수동 trigger 모두 활성. main push 와 v* 태그, main 대상 PR 에서 CI 가 돈다.
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  #   tags: ["v*"]
-  # pull_request:
-  #   branches: [main]
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
