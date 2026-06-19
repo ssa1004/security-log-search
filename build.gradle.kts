@@ -16,7 +16,7 @@ plugins {
     //                  open 처리해 CGLIB proxy 가능하게 한다. adapter-in / adapter-out 에 적용.
     kotlin("plugin.spring") version "1.9.24" apply false
     // plugin.jpa — @Entity 가 붙은 class 에 no-arg constructor 합성. adapter-out 만 사용.
-    kotlin("plugin.jpa") version "1.9.24" apply false
+    kotlin("plugin.jpa") version "2.4.0" apply false
     // Kover — Kotlin-native 코드 커버리지. 프로덕션 소스가 100% Kotlin 이라 JaCoCo 대신 Kover
     //         를 쓴다. 루트에 적용하면 koverHtmlReport / koverXmlReport 가 하위 모듈 (kover
     //         적용된) 커버리지를 집계한다.
