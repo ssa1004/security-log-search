@@ -17,6 +17,10 @@ plugins {
     kotlin("plugin.spring") version "1.9.24" apply false
     // plugin.jpa — @Entity 가 붙은 class 에 no-arg constructor 합성. adapter-out 만 사용.
     kotlin("plugin.jpa") version "1.9.24" apply false
+    // Kover — Kotlin-native 코드 커버리지. 프로덕션 소스가 100% Kotlin 이라 JaCoCo 대신 Kover
+    //         를 쓴다. 루트에 적용하면 koverHtmlReport / koverXmlReport 가 하위 모듈 (kover
+    //         적용된) 커버리지를 집계한다.
+    id("org.jetbrains.kotlinx.kover") version "0.8.3"
 }
 
 allprojects {
@@ -30,9 +34,33 @@ allprojects {
     }
 }
 
+// Kover 집계 대상 — 단위 테스트로 커버리지가 나오는 6개 모듈. e2e-tests 는 Testcontainers
+// 통합 테스트 전용 (Docker 필요) 이라 집계에서 빼고 Kover 자체를 적용하지 않는다.
+val koverModules = setOf(
+    "security-domain",
+    "security-application",
+    "security-adapter-in",
+    "security-adapter-out",
+    "security-streaming",
+    "security-bootstrap",
+)
+
 subprojects {
     apply(plugin = "java")
     apply(plugin = "io.spring.dependency-management")
+    // 집계 대상 모듈에만 Kover 를 적용해야 루트의 koverHtmlReport / koverXmlReport 가 집계한다.
+    if (name in koverModules) {
+        apply(plugin = "org.jetbrains.kotlinx.kover")
+        // 커버리지는 단위 test 만 — integrationTest (Testcontainers, Docker 필요) 는 Kover 가
+        // 강제 실행하지 않도록 instrumentation 대상에서 뺀다. Docker 없이도 koverHtmlReport 가능.
+        extensions.configure<kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension> {
+            currentProject {
+                instrumentation {
+                    disabledForTestTasks.add("integrationTest")
+                }
+            }
+        }
+    }
 
     java {
         toolchain {
@@ -79,5 +107,38 @@ subprojects {
     tasks.withType<JavaCompile> {
         options.compilerArgs.addAll(listOf("-parameters", "-Xlint:all", "-Xlint:-processing", "-Xlint:-serial"))
         options.encoding = "UTF-8"
+    }
+}
+
+// 커버리지 집계 — 루트 koverHtmlReport / koverXmlReport 가 아래 모듈들의 단위 테스트
+// 커버리지를 합산한다. e2e-tests 는 Testcontainers 통합 테스트 (별도 task) 라 단위 test
+// 에서 커버리지가 0 이므로 집계에서 제외.
+dependencies {
+    kover(project(":security-domain"))
+    kover(project(":security-application"))
+    kover(project(":security-adapter-in"))
+    kover(project(":security-adapter-out"))
+    kover(project(":security-streaming"))
+    kover(project(":security-bootstrap"))
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                // Spring Boot main / generated config 은 로직이 없어 커버리지 측정 노이즈.
+                classes("com.example.security.SecurityLogSearchApplication")
+                classes("com.example.security.SecurityLogSearchApplicationKt")
+            }
+        }
+        // CI 가 줍기 좋은 단일 XML 경로 (코드 커버리지 배지 / 외부 리포터 연동용).
+        total {
+            xml {
+                onCheck.set(false)
+            }
+            html {
+                onCheck.set(false)
+            }
+        }
     }
 }
