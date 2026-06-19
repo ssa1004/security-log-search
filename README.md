@@ -513,6 +513,10 @@ docker compose -f infrastructure/docker/docker-compose.integration.yml up -d
 
 자세한 절차와 검증 포인트는 [scripts/integration-demo.sh](scripts/integration-demo.sh) 의 헤더 주석.
 
+> 데모 흐름 (통합 시연 / Sigma → Flink → alert / k6 멀티테넌트 격리) 을 GIF·cast 로
+> 캡처하는 정확한 명령은 [docs/screenshots/README.md](docs/screenshots/README.md) 참고.
+> 아키텍처 다이어그램 SVG 는 [docs/diagrams/](docs/diagrams/) 에 렌더링돼 있다.
+
 ## 수동 GitHub push
 
 `gh` CLI 가 없는 환경이면 다음으로 push.
