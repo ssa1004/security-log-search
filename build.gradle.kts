@@ -14,7 +14,7 @@ plugins {
     kotlin("jvm") version "1.9.24" apply false
     // plugin.spring — @Component / @Controller / @Service 등 Spring 어노테이션 class 를 자동
     //                  open 처리해 CGLIB proxy 가능하게 한다. adapter-in / adapter-out 에 적용.
-    kotlin("plugin.spring") version "1.9.24" apply false
+    kotlin("plugin.spring") version "2.4.0" apply false
     // plugin.jpa — @Entity 가 붙은 class 에 no-arg constructor 합성. adapter-out 만 사용.
     kotlin("plugin.jpa") version "1.9.24" apply false
     // Kover — Kotlin-native 코드 커버리지. 프로덕션 소스가 100% Kotlin 이라 JaCoCo 대신 Kover
