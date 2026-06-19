@@ -51,12 +51,24 @@ jobs:
       - name: Bootstrap context test
         run: ./gradlew --no-daemon :security-bootstrap:test
 
+      - name: Aggregate coverage report (Kover)
+        # 위에서 6개 모듈 test 가 이미 돌았으므로 리포트만 집계. integrationTest 는
+        # disabledForTestTasks 로 제외돼 Docker 없이 동작.
+        run: ./gradlew --no-daemon koverXmlReport koverHtmlReport koverLog
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: '**/build/reports/tests/'
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/reports/kover/
 
   integration-test:
     name: Testcontainers IT
