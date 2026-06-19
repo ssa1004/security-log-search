@@ -10,6 +10,39 @@
 [![ClickHouse](https://img.shields.io/badge/ClickHouse-FFCC01.svg?logo=clickhouse&logoColor=black)](https://clickhouse.com/)
 [![Code style: editorconfig](https://img.shields.io/badge/code%20style-editorconfig-000000.svg?logo=editorconfig)](.editorconfig)
 
+> **English summary** (한국어 본문은 아래에 이어집니다 / Korean documentation continues below.)
+>
+> A SIEM-style backend platform that ingests, normalizes, searches and analyzes
+> high-volume security logs. Raw events from firewalls, EDR, syslog and application
+> sources are normalized to **ECS** (Elastic Common Schema) or **OCSF** (Open
+> Cybersecurity Schema Framework), published through **Kafka**, and dual-sinked into
+> **OpenSearch** (full-text search) and **ClickHouse** (high-volume aggregation). An
+> **Apache Flink** job evaluates real-time correlation rules and fires alerts.
+>
+> **Highlights**
+> - Hexagonal architecture across a 7-module Gradle build (`domain` → `application` →
+>   `adapter-in`/`adapter-out` → `bootstrap`, with `streaming` as a standalone Flink jar
+>   and `e2e-tests` for Testcontainers).
+> - 11 use cases: log ingest (idempotent), Lucene search, ClickHouse stats, alert-rule
+>   CRUD, Flink alert evaluation, Sigma rule import, multi-tenant onboarding, audit query,
+>   OpenSearch index/ILM management.
+> - **4-layer multi-tenant isolation** (OpenSearch alias, ClickHouse row policy, JWT
+>   `tenant_id` claim, forced query rewrite) — see [ADR-0007](docs/adr/0007-multi-tenant-isolation.md).
+> - 15 ADRs covering ECS/OCSF, dual sink, Flink vs Kafka Streams, Sigma import,
+>   ISMS-P control mapping and observability — see [docs/adr/](docs/adr/).
+>
+> **Tech stack**: Kotlin 1.9 (JVM 21), Spring Boot 3.4, Apache Flink 1.18, Kafka,
+> OpenSearch 2.x, ClickHouse 24.x, PostgreSQL 16, Gradle 8, Helm + ArgoCD.
+>
+> **Language note**: the production source set is **100% Kotlin** (130 files, 0 Java).
+> The test suite is currently **mixed** — 9 Kotlin and 26 Java test files (35 total); the
+> domain, application and Flink-streaming tests are still Java and their migration to
+> Kotlin is deferred (the Flink `LocalExecutionEnvironment` integration test also waits on
+> the Flink 1.19 upgrade — see [Tech stack](#기술-스택) and [Roadmap](#향후-개선)).
+>
+> **Quick start**: `make up` (infra) → `make run` (app on :8080) → `make seed` → `make demo`.
+> Full commands are in [빠른 실행](#빠른-실행) below.
+
 대용량 보안 로그를 수집·정규화·검색·분석하는 SIEM 형태의 백엔드 플랫폼입니다.
 다양한 source (방화벽 / EDR / 시스템 / 응용 로그) 의 raw event 를 ECS (Elastic Common Schema,
 보안·관측 로그 표준) 또는 OCSF (Open Cybersecurity Schema Framework, 벤더 중립 보안 로그
@@ -146,7 +179,10 @@ sequenceDiagram
 
 ## 기술 스택
 
-- **Language**: Kotlin 1.9 (JVM 21 toolchain, virtual threads on)
+- **Language**: 프로덕션 소스는 100% Kotlin 1.9 (JVM 21 toolchain, virtual threads on,
+  130개 파일 / Java 0개). 테스트는 현재 혼재 — Kotlin 9개 + Java 26개 (총 35개). domain /
+  application / streaming 테스트는 아직 Java 이며 Kotlin 이관은 보류 상태 (Flink 통합 테스트는
+  아래 1.19 업그레이드와 함께 복귀 예정).
 - **Framework**: Spring Boot 3.4
 - **Storage**:
   - PostgreSQL 16 (control plane: tenants / alert_rules / alerts / audit_entries / idempotency)
@@ -158,8 +194,9 @@ sequenceDiagram
 - **Observability**: Micrometer + Prometheus
 - **API doc**: springdoc-openapi (Swagger UI)
 - **Build / CI**: Gradle 8, GitHub Actions, Docker multi-stage, Helm + ArgoCD
-- **Test**: JUnit 5 + Mockito + Testcontainers, Flink correlation 은 ProcessFunction 직접 호출
-  (1.18 + Java 17+ record 직렬화 이슈로 LocalExecutionEnvironment 통합 테스트는 1.19 업그레이드 후 복귀 예정)
+- **Test**: JUnit 5 + Mockito + Testcontainers (JVM 위에서 Kotlin / Java 테스트 공존). Flink
+  correlation 은 ProcessFunction 직접 호출 (1.18 + Java 17+ record 직렬화 이슈로
+  LocalExecutionEnvironment 통합 테스트는 1.19 업그레이드 후 복귀 예정)
 
 ## 빠른 실행
 
