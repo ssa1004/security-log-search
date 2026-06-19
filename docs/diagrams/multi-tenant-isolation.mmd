@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    participant U as Operator (acme)
+    participant API as REST API
+    participant Sec as SecurityFilterChain
+    participant Svc as SearchService
+    participant OS as OpenSearch
+    participant CH as ClickHouse
+
+    U->>API: POST /search { q: "*" } + JWT
+    API->>Sec: JWT verify + extract tenant claim
+    Note over Sec: claim.tenant_id = "acme"
+    Sec->>Svc: inject OperatorContext(tenant=acme)
+    Svc->>Svc: query rewrite — q AND tenantId:acme
+    par OpenSearch path
+        Svc->>OS: GET events-acme-read/_search
+        Note over OS: alias points only to acme indices (1)
+    and ClickHouse path
+        Svc->>CH: SET tenant_id='acme' then SELECT ...
+        Note over CH: Row Policy keeps only matching rows (2)
+    end
+    Note over U,CH: another tenant (globex) is blocked at all 4 layers
