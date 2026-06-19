@@ -11,6 +11,8 @@
 // Kotlin 마이그레이션 — Flink ProcessFunction / serde 까지 Kotlin. Flink 직렬화는 Kotlin class
 // (extends Java generic) 와 일반 class + Serializable 조합으로 보존된다. plugin.spring 은 필요 X
 // (Flink runtime 은 Spring proxy 사용 안 함).
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+
 plugins {
     `java-library`
     kotlin("jvm")
@@ -45,6 +47,16 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.assertj:assertj-core")
     testImplementation("org.junit.jupiter:junit-jupiter")
+}
+
+// lz4-java capability 충돌 해소 — Spring Boot 3.5 BOM 이 kafka-clients 를 3.9.2 로 올리면서
+// kafka 가 maintained fork 인 at.yawk.lz4:lz4-java:1.10.1 을 끌어온다. 반면 flink-runtime:1.18.1
+// (테스트 런타임) 은 옛 org.lz4:lz4-java:1.8.0 (CVE-2025-12183) 을 끌어온다. 둘이 동일한
+// 'org.lz4:lz4-java' capability 를 제공해 Gradle 이 선택을 못 하므로, 패치된 fork 쪽을 명시 선택한다.
+configurations.all {
+    resolutionStrategy.capabilitiesResolution.withCapability("org.lz4:lz4-java") {
+        select(candidates.first { it.id.let { id -> id is ModuleComponentIdentifier && id.group == "at.yawk.lz4" } })
+    }
 }
 
 kotlin {
