@@ -1,6 +1,7 @@
 # Security Log Search
 
 [![CI](https://github.com/ssa1004/security-log-search/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ssa1004/security-log-search/actions/workflows/ci.yml)
+[![Coverage: Kover](https://img.shields.io/badge/coverage-Kover-7F52FF.svg?logo=kotlin)](#테스트-커버리지)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Kotlin 1.9](https://img.shields.io/badge/Kotlin-1.9-7F52FF.svg?logo=kotlin)](https://kotlinlang.org/)
 [![JVM 21](https://img.shields.io/badge/JVM-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
@@ -219,6 +220,22 @@ sequenceDiagram
 ```bash
 ./gradlew test
 ```
+
+### 테스트 커버리지
+
+프로덕션 소스가 100% Kotlin 이라 JaCoCo 대신 Kotlin-native 인
+[Kover](https://github.com/Kotlin/kotlinx-kover) 를 쓴다. 루트에 적용했고 6개 모듈
+(domain / application / adapter-in / adapter-out / streaming / bootstrap) 의 단위 테스트
+커버리지를 집계한다 (e2e-tests 는 Docker 필요한 통합 테스트라 집계 제외).
+
+```bash
+./gradlew test koverHtmlReport     # HTML 리포트 → build/reports/kover/html/index.html
+./gradlew koverXmlReport           # XML (CI / 커버리지 배지 연동용) → build/reports/kover/report.xml
+./gradlew koverLog                 # 콘솔에 라인 커버리지 % 출력
+```
+
+> 단일 모듈만 빠르게 보려면 `./gradlew :security-domain:test :security-domain:koverLogJvm`.
+> Docker 없이 도는 순수 단위 테스트라 빠르다.
 
 ### Testcontainers 통합 테스트 (Docker 필요)
 
