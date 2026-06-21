@@ -200,6 +200,9 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
 
+      # streaming 이미지에는 .trivyignore 를 적용한다. 현재 CVE-2026-35194
+      # (flink-table-planner, fix=1.20.4+/2.x major) 한 건만 문서화 후 제외하고,
+      # 나머지 fixable HIGH/CRITICAL 은 그대로 게이트가 막는다. (API 게이트엔 미적용.)
       - name: Trivy gate (streaming)
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
@@ -207,6 +210,7 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "1"
           ignore-unfixed: true
+          trivyignores: .trivyignore
 
   helm-validate:
     name: Helm lint + kubeconform
