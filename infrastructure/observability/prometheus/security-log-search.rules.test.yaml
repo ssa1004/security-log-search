@@ -41,9 +41,12 @@ tests:
   # 3) alert — IngestRateDropped: 현재 rate 가 1h 전 baseline 의 50% 미만이면 5분 뒤 발화.
   - interval: 1m
     input_series:
-      # 0-65min: +600/min (10/s). 66-80min: +20/min (0.33/s) — 97% 하락.
+      # 0-65min: +600/min (10/s, 누적 39000). 66-80min: 39000 에서 +20/min (0.33/s)
+      # 로 매끄럽게 이어짐 — 97% 하락. 두 번째 구간 시작값을 39000 으로 둬야 t=66 에
+      # 가짜 +600 점프가 생기지 않고, rate[5m] 가 t=70m 부터 하락을 반영해 for:5m 가
+      # 채워져 t=75m 에 발화한다 (39600 으로 두면 점프 때문에 t=76m 까지 안 떨어짐).
       - series: 'security_log_ingest_total{source="cloudtrail"}'
-        values: '0+600x65 39600+20x15'
+        values: '0+600x65 39000+20x15'
     alert_rule_test:
       - alertname: IngestRateDropped
         eval_time: 75m
