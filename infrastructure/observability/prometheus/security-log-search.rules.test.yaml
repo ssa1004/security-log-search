@@ -1,0 +1,100 @@
+# promtool test rules — security-log-search PrometheusRule 검증.
+#
+# 실행:
+#   helm template t helm/security-log-search --show-only templates/prometheusrule.yaml \
+#     | yq eval '{"groups": .spec.groups}' - > /tmp/sls-rules.yaml
+#   promtool test rules infrastructure/observability/prometheus/security-log-search.rules.test.yaml
+#
+# rule_files 는 위 helm 렌더 결과를 가리킨다. CI 의 observability job 이 동일 순서로 실행.
+rule_files:
+  - /tmp/sls-rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # 1) recording rule — ingest rate 가 source/tenant 별로 집계되는지.
+  - interval: 1m
+    input_series:
+      - series: 'security_log_ingest_total{source="cloudtrail", tenant="acme", schema="ecs"}'
+        values: '0+60x10'
+    promql_expr_test:
+      - expr: sls:ingest:rate5m
+        eval_time: 5m
+        exp_samples:
+          - labels: 'sls:ingest:rate5m{source="cloudtrail", tenant="acme"}'
+            value: 1
+
+  # 2) recording rule — 정규화 실패 비율이 계산되는지 (존재 + 부호 확인).
+  - interval: 1m
+    input_series:
+      - series: 'security_log_ingest_total{source="syslog"}'
+        values: '0+100x10'
+      - series: 'security_log_normalize_failures_total{source="syslog", schema="ecs", reason="parse"}'
+        values: '0+25x10'
+    promql_expr_test:
+      - expr: sls:normalize:failure_ratio5m
+        eval_time: 5m
+        exp_samples:
+          - labels: 'sls:normalize:failure_ratio5m{}'
+            value: 0.25
+
+  # 3) alert — IngestRateDropped: 현재 rate 가 1h 전 baseline 의 50% 미만이면 5분 뒤 발화.
+  - interval: 1m
+    input_series:
+      # 0-65min: +600/min (10/s). 66-80min: +20/min (0.33/s) — 97% 하락.
+      - series: 'security_log_ingest_total{source="cloudtrail"}'
+        values: '0+600x65 39600+20x15'
+    alert_rule_test:
+      - alertname: IngestRateDropped
+        eval_time: 75m
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              team: security-platform
+            exp_annotations:
+              summary: "ingest rate 가 1시간 전 대비 50% 이하로 하락"
+              description: "5분간 ingest rate 가 baseline 대비 급감. 수집 source / 파서 / Kafka producer 확인."
+              runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/ingest-throughput-drop.md"
+
+  # 4) alert — SearchLatencyHigh: p99 가 1.5s SLO 를 넘으면 10분 뒤 발화.
+  - interval: 1m
+    input_series:
+      # 모든 관측치가 le=2 bucket 에만 들어감 (le=1, le=1.5 는 0) → p99 ~2s > 1.5s.
+      - series: 'security_log_search_latency_seconds_bucket{type="opensearch", le="1"}'
+        values: '0+0x20'
+      - series: 'security_log_search_latency_seconds_bucket{type="opensearch", le="1.5"}'
+        values: '0+0x20'
+      - series: 'security_log_search_latency_seconds_bucket{type="opensearch", le="2"}'
+        values: '0+60x20'
+      - series: 'security_log_search_latency_seconds_bucket{type="opensearch", le="+Inf"}'
+        values: '0+60x20'
+    alert_rule_test:
+      - alertname: SearchLatencyHigh
+        eval_time: 15m
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              team: security-platform
+              type: opensearch
+            exp_annotations:
+              summary: "OpenSearch 검색 p99 가 SLO (1.5s) 를 초과"
+              description: "검색 지연이 SLO 를 넘었습니다. OpenSearch 클러스터 / shard / 쿼리 패턴 확인."
+              runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/ingest-throughput-drop.md"
+
+  # 5) alert — AlertFireRateSpike: 발생률이 baseline 의 10배 이상이면 critical.
+  - interval: 1m
+    input_series:
+      # 0-65min: +6/min (0.1/s). 66-80min: +120/min (2/s) — 20배.
+      - series: 'security_log_alert_fired_total{rule_id="r1", severity="high", tenant="acme"}'
+        values: '0+6x65 390+120x15'
+    alert_rule_test:
+      - alertname: AlertFireRateSpike
+        eval_time: 75m
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              team: security-platform
+            exp_annotations:
+              summary: "알람 발생률이 baseline 대비 10배 이상 (알람 폭주)"
+              description: "실제 사고 vs false positive 판정 먼저. 룰을 끄기 전 runbook 1단계 수행."
+              runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/alert-storm.md"

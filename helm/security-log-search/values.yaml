@@ -161,6 +161,22 @@ monitoring:
     enabled: true
     interval: 30s
     scrapeTimeout: 10s
+  # PrometheusRule (Prometheus Operator) — recording + alerting rules.
+  # 알람 이름 / 임계값은 docs/runbook/*.md 의 runbook 트리거와 1:1 로 맞춘다.
+  prometheusRule:
+    enabled: true
+    # 추가 라벨 — Prometheus Operator 의 ruleSelector 가 잡는 라벨 (cluster 마다 다름).
+    additionalLabels: {}
+    # alert label 에 붙는 환경 식별자 — routing (Alertmanager) 에서 사용.
+    severityLabels:
+      team: security-platform
+    # SLO 임계값 — env 별 override 가능.
+    thresholds:
+      searchLatencyP99Seconds: 1.5
+      ingestDropRatio: 0.5
+      alertSpikeRatio: 10
+      flinkConsumerLag: 50000
+      flinkBackpressureRatio: 0.6
 
 # ISMS-P 관점: prod 는 기본 활성. dev / staging 은 values-dev.yaml 에서 false override.
 networkPolicy:

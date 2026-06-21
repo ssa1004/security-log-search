@@ -1,0 +1,30 @@
+# Grafana dashboard provisioning — infrastructure/observability/grafana/dashboards 의
+# 4개 JSON (alerts-overview / flink-correlation / ingest-throughput / query-latency) 을
+# 컨테이너 기동 시 자동 로드한다.
+#
+# 사용:
+#   - 본 파일을 /etc/grafana/provisioning/dashboards/dashboards.yaml 로 마운트.
+#   - dashboards/*.json 을 options.path (아래) 로 마운트.
+#
+# Helm (grafana/grafana chart) 사용 시 values 의 dashboardProviders 에 본 provider 를,
+# dashboardsConfigMaps / dashboards 에 4개 JSON 을 넣으면 동일 효과.
+apiVersion: 1
+
+providers:
+  - name: security-log-search
+    orgId: 1
+    # Grafana UI 의 dashboard 폴더명.
+    folder: Security Log Search
+    folderUid: sls
+    type: file
+    # 운영자가 UI 에서 수정/삭제하지 못하게 (provisioning 이 source of truth).
+    disableDeletion: true
+    editable: false
+    # 파일 변경 감지 주기 (초). 0 이면 기동 시 1회만.
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      # 컨테이너 안에서 4개 JSON 이 놓이는 경로. 마운트 위치와 일치시킬 것.
+      path: /var/lib/grafana/dashboards/security-log-search
+      # JSON 안의 폴더 구조를 Grafana 폴더로 그대로 반영.
+      foldersFromFilesStructure: false

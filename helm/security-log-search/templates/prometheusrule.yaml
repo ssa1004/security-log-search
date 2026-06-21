@@ -1,0 +1,142 @@
+{{- if .Values.monitoring.prometheusRule.enabled }}
+{{- $t := .Values.monitoring.prometheusRule.thresholds }}
+# PrometheusRule — recording + alerting. 각 alert 의 runbook_url annotation 은
+# docs/runbook/ 의 대응 문서를 가리킨다. 메트릭 이름은
+# security-adapter-in 의 SecurityLogMetrics.kt 와 일치.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "security-log-search.fullname" . }}
+  labels:
+    {{- include "security-log-search.labels" . | nindent 4 }}
+    {{- with .Values.monitoring.prometheusRule.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    # --- recording rules — dashboard / alert 가 재사용하는 사전계산 시계열 ---
+    - name: security-log-search.recording
+      interval: 30s
+      rules:
+        - record: sls:ingest:rate5m
+          expr: sum by (source, tenant) (rate(security_log_ingest_total[5m]))
+        - record: sls:search:p99_seconds
+          expr: histogram_quantile(0.99, sum by (type, le) (rate(security_log_search_latency_seconds_bucket[5m])))
+        - record: sls:alerts:rate5m
+          expr: sum by (severity, tenant) (rate(security_log_alert_fired_total[5m]))
+        - record: sls:normalize:failure_ratio5m
+          expr: |
+            sum(rate(security_log_normalize_failures_total[5m]))
+              /
+            clamp_min(sum(rate(security_log_ingest_total[5m])), 1)
+    # --- alerting rules — runbook 과 1:1 ---
+    - name: security-log-search.alerts
+      rules:
+        # docs/runbook/ingest-throughput-drop.md
+        - alert: IngestRateDropped
+          expr: |
+            sum(rate(security_log_ingest_total[5m]))
+              <
+            {{ $t.ingestDropRatio }} * sum(rate(security_log_ingest_total[1h] offset 1h))
+          for: 5m
+          labels:
+            severity: warning
+            {{- with .Values.monitoring.prometheusRule.severityLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "ingest rate 가 1시간 전 대비 {{ $t.ingestDropRatio | float64 | mulf 100 }}% 이하로 하락"
+            description: "5분간 ingest rate 가 baseline 대비 급감. 수집 source / 파서 / Kafka producer 확인."
+            runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/ingest-throughput-drop.md"
+        # docs/runbook/ingest-throughput-drop.md (정규화 실패)
+        - alert: NormalizeFailureRateHigh
+          expr: sls:normalize:failure_ratio5m > 0.05
+          for: 10m
+          labels:
+            severity: warning
+            {{- with .Values.monitoring.prometheusRule.severityLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "정규화 실패 비율 > 5% (5분 rate 기준)"
+            description: "새 source schema / 손상된 입력 의심. security_log_normalize_failures_total 의 reason 라벨 확인."
+            runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/ingest-throughput-drop.md"
+        # docs/runbook/query-latency 관련 — SLO p99
+        - alert: SearchLatencyHigh
+          expr: |
+            histogram_quantile(0.99,
+              sum by (type, le) (rate(security_log_search_latency_seconds_bucket{type="opensearch"}[5m]))
+            ) > {{ $t.searchLatencyP99Seconds }}
+          for: 10m
+          labels:
+            severity: warning
+            {{- with .Values.monitoring.prometheusRule.severityLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "OpenSearch 검색 p99 가 SLO ({{ $t.searchLatencyP99Seconds }}s) 를 초과"
+            description: "검색 지연이 SLO 를 넘었습니다. OpenSearch 클러스터 / shard / 쿼리 패턴 확인."
+            runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/ingest-throughput-drop.md"
+        # docs/runbook/alert-storm.md
+        - alert: AlertFireRateSpike
+          expr: |
+            sum(rate(security_log_alert_fired_total[5m]))
+              >
+            {{ $t.alertSpikeRatio }} * sum(rate(security_log_alert_fired_total[1h] offset 1h))
+          for: 5m
+          labels:
+            severity: critical
+            {{- with .Values.monitoring.prometheusRule.severityLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "알람 발생률이 baseline 대비 {{ $t.alertSpikeRatio }}배 이상 (알람 폭주)"
+            description: "실제 사고 vs false positive 판정 먼저. 룰을 끄기 전 runbook 1단계 수행."
+            runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/alert-storm.md"
+        # docs/runbook/flink-job-not-progressing.md
+        - alert: FlinkCorrelationJobLagging
+          expr: |
+            max by (topic) (
+              kafka_consumergroup_lag{consumergroup=~"flink.*", topic="events.normalized"}
+            ) > {{ $t.flinkConsumerLag }}
+          for: 5m
+          labels:
+            severity: warning
+            {{- with .Values.monitoring.prometheusRule.severityLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "Flink correlation job consumer lag > {{ $t.flinkConsumerLag }} (events.normalized)"
+            description: "Flink 가 commit 을 못 하고 있는지 (ack 멈춤) 먼저 의심. checkpoint / backpressure 확인."
+            runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/flink-job-not-progressing.md"
+        # docs/runbook/flink-job-not-progressing.md (checkpoint)
+        - alert: FlinkCheckpointFailed
+          expr: |
+            time() - max(flink_jobmanager_job_lastCheckpointCompletedTimestamp) / 1000 > 600
+          for: 5m
+          labels:
+            severity: critical
+            {{- with .Values.monitoring.prometheusRule.severityLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "마지막 성공 Flink checkpoint 가 10분 이상 전"
+            description: "state 가 커지고 있을 수 있음. checkpoint 실패 원인 (storage / timeout) 확인."
+            runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/flink-job-not-progressing.md"
+        # docs/runbook/flink-job-not-progressing.md (backpressure)
+        - alert: FlinkBackpressureHigh
+          expr: |
+            max by (job_name) (
+              flink_taskmanager_job_task_backPressuredTimeMsPerSecond / 1000
+            ) > {{ $t.flinkBackpressureRatio }}
+          for: 5m
+          labels:
+            severity: warning
+            {{- with .Values.monitoring.prometheusRule.severityLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "Flink backpressure ratio > {{ $t.flinkBackpressureRatio }} — downstream 병목"
+            description: "downstream operator / sink 가 느림. sink (OpenSearch / ClickHouse) latency 확인."
+            runbook_url: "https://github.com/ssa1004/security-log-search/blob/main/docs/runbook/flink-job-not-progressing.md"
+{{- end }}
