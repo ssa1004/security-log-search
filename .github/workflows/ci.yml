@@ -160,7 +160,7 @@ jobs:
       # Security 탭(code scanning)에 올린다. 업로드 실패가 빌드를 막지 않게 upload 만
       # continue-on-error. 게이트(HIGH/CRITICAL fixable 시 fail)는 마지막 단계가 담당. ---
       - name: Trivy scan API image (SARIF)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/security-log-search:${{ steps.meta.outputs.tag }}
           format: sarif
@@ -176,7 +176,7 @@ jobs:
           category: trivy-api
 
       - name: Trivy scan streaming image (SARIF)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/security-log-search-streaming:${{ steps.meta.outputs.tag }}
           format: sarif
@@ -193,7 +193,7 @@ jobs:
 
       # 게이트 — fixable HIGH/CRITICAL 이 있으면 빌드 실패 (두 이미지 모두).
       - name: Trivy gate (API)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/security-log-search:${{ steps.meta.outputs.tag }}
           severity: HIGH,CRITICAL
@@ -204,7 +204,7 @@ jobs:
       # (flink-table-planner, fix=1.20.4+/2.x major) 한 건만 문서화 후 제외하고,
       # 나머지 fixable HIGH/CRITICAL 은 그대로 게이트가 막는다. (API 게이트엔 미적용.)
       - name: Trivy gate (streaming)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/security-log-search-streaming:${{ steps.meta.outputs.tag }}
           severity: HIGH,CRITICAL
