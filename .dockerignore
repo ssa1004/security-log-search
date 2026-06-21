@@ -1,0 +1,52 @@
+# build context 최소화 + 빌드 산출물 / 로컬 비밀 누출 방지.
+# Dockerfile / Dockerfile.streaming 둘 다 gradle 소스만 필요로 한다.
+
+# VCS / IDE
+.git
+.gitignore
+.gitattributes
+.idea
+*.iml
+.vscode
+.DS_Store
+
+# Gradle / 빌드 산출물 (이미지 안에서 다시 빌드한다)
+.gradle
+**/build
+build
+!**/src/**/build
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# 테스트 / 커버리지 리포트
+**/build/reports
+**/build/test-results
+**/kover
+
+# CI / 문서 / 인프라 — 이미지 빌드에 불필요
+# (e2e-tests 는 build.gradle.kts 가 COPY 대상이라 디렉터리째 제외하지 않는다 —
+#  소스/리포트는 위 **/build 규칙으로 이미 빠진다.)
+.github
+docs
+load
+scripts
+catalog-info.yaml
+CONTRIBUTING.md
+SECURITY.md
+README.md
+LICENSE
+Makefile
+
+# 로컬 비밀 / 자격증명 (혹시라도)
+*.pem
+*.key
+*.p12
+*.env
+.env*
+infrastructure/docker/mock-auth/private-key.pem
+
+# 컨테이너 정의 자체는 context 에 불필요
+infrastructure/docker
+**/Dockerfile
+**/Dockerfile.*
+.dockerignore

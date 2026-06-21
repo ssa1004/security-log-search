@@ -19,11 +19,35 @@ COPY security-domain security-domain
 COPY security-streaming security-streaming
 RUN ./gradlew --no-daemon :security-streaming:jar -x test
 
-# --- runtime stage — Flink 1.18 base image ---
+# --- runtime stage — Flink 1.18 base image (Debian/Temurin 기반) ---
 FROM flink:1.18.1-java17
+
+# OCI image 메타데이터 — registry / scanner 가 소스/라이선스 추적에 사용.
+LABEL org.opencontainers.image.title="security-log-search-streaming" \
+      org.opencontainers.image.description="Flink correlation job for security-log-search SIEM" \
+      org.opencontainers.image.source="https://github.com/ssa1004/security-log-search" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.vendor="ssa1004"
+
+# OS 패치 — flink base 는 Debian 계열이라 apk 가 아닌 apt 사용. base layer 에 남아있는
+# 패치 이전 패키지를 빌드 시점에 upgrade 해 fixable HIGH/CRITICAL 을 줄인다. root 로
+# 수행한 뒤 다시 비권한 flink 유저로 전환한다.
+USER root
+# hadolint ignore=DL3008
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 보안 — 비권한 flink 유저 (uid 9999) 로 실행.
 USER flink
 
 COPY --from=builder /workspace/security-streaming/build/libs/security-streaming-*.jar /opt/flink/usrlib/security-streaming.jar
+
+# JobManager REST endpoint 헬스 — 기동 후 job 제출/상태를 확인하는 일반적 신호.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD wget -qO- http://localhost:8081/overview || exit 1
 
 # 운영 시 jobmanager 가 본 jar 를 자동 로드 (usrlib).
 # job submit:
