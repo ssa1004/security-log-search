@@ -1,0 +1,22 @@
+# CODEOWNERS — PR 리뷰 자동 할당. 첫 매칭이 아니라 마지막 매칭이 우선한다.
+# (참고: https://docs.github.com/articles/about-code-owners)
+
+# 기본 — 모든 변경은 저장소 owner 가 리뷰.
+*                                   @ssa1004
+
+# 보안 민감 영역 — 인증/인가, 도메인 정책, 감사 로그.
+/security-domain/                   @ssa1004
+/security-application/              @ssa1004
+
+# DevOps surface — CI / 컨테이너 / Helm / k8s / 관측성.
+/.github/                           @ssa1004
+/infrastructure/                    @ssa1004
+/helm/                              @ssa1004
+
+# 보안 정책 / 공급망 문서.
+/SECURITY.md                        @ssa1004
+/.github/dependabot.yml             @ssa1004
+
+# 운영 문서 — runbook / ADR 변경은 owner 리뷰.
+/docs/runbook/                      @ssa1004
+/docs/adr/                          @ssa1004
