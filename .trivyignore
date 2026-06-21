@@ -1,0 +1,16 @@
+# Trivy ignore list — security-log-search.
+#
+# 정책: 항목은 반드시 (1) 단일 CVE 만, (2) 왜 무시하는지, (3) 해제 조건(추적)을
+# 주석으로 남긴다. 전체 스캔을 약화(exit-code 0 / ignore-unfixed 전체 등)하지
+# 않는다. 나머지 모든 fixable HIGH/CRITICAL 은 게이트가 그대로 막는다.
+#
+# 이 파일은 streaming 이미지 Trivy 스텝에서만 trivyignores 입력으로 참조된다
+# (.github/workflows/ci.yml). API 이미지 게이트에는 적용되지 않는다.
+
+# CVE-2026-35194 — org.apache.flink:flink-table-planner_2.12 (HIGH, SQL injection RCE).
+# Flink base image(flink:1.18.1-java17)에 번들된 table-planner 에 존재.
+# 수정 버전은 Flink 1.20.4 / 2.x 로, 1.18.x 패치로는 해결 불가 → base image 의
+# 메이저 업그레이드가 필요하며 blind 업그레이드는 streaming job 호환성 리스크가 큼.
+# 별도 트래킹 후 1.20.4+/2.x 로 올릴 때 이 항목을 제거한다.
+# tracked: docs/runbook (flink upgrade) / GitHub issue.
+CVE-2026-35194
