@@ -1,0 +1,57 @@
+security-log-search ({{ .Chart.AppVersion }}) 가 release "{{ .Release.Name }}" 로
+namespace "{{ .Release.Namespace }}" 에 배포되었습니다.
+
+1. 워크로드 상태 확인:
+
+   kubectl -n {{ .Release.Namespace }} rollout status deploy/{{ include "security-log-search.fullname" . }}
+   kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/name={{ include "security-log-search.name" . }},app.kubernetes.io/instance={{ .Release.Name }}
+
+2. API 접근:
+{{- if .Values.ingress.enabled }}
+   Ingress 가 활성입니다. 다음 host 로 접근하세요:
+{{- range .Values.ingress.hosts }}
+  {{- $scheme := "http" }}
+  {{- if $.Values.ingress.tls }}{{ $scheme = "https" }}{{ end }}
+   - {{ $scheme }}://{{ .host }}/api/v1/search
+{{- end }}
+{{- if and .Values.ingress.admin .Values.ingress.admin.enabled }}
+   admin (운영자 전용, IP allowlist 권장): https://{{ .Values.ingress.admin.host }}{{ .Values.ingress.admin.path }}
+{{- end }}
+{{- else }}
+   Ingress 가 비활성입니다. 로컬에서 port-forward 로 접근하세요:
+
+   kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "security-log-search.fullname" . }} 8080:{{ .Values.service.port }}
+   curl http://localhost:8080/actuator/health
+{{- end }}
+
+3. 보안 컨텍스트 (ISMS-P 2.6 / CIS 5.2):
+{{- if .Values.securityContext.container.readOnlyRootFilesystem }}
+   readOnlyRootFilesystem=true, drop ALL caps, runAsNonRoot=true 로 기동합니다.
+   쓰기 경로는 emptyDir 로 마운트됩니다:
+{{- range .Values.securityContext.writableVolumes }}
+     - {{ .mountPath }}
+{{- end }}
+{{- else }}
+   주의: readOnlyRootFilesystem 가 비활성입니다. 운영 환경에서는 활성을 권장합니다.
+{{- end }}
+
+4. 관측성:
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+   ServiceMonitor 가 활성입니다 (Prometheus Operator 가 /actuator/prometheus 를 scrape).
+{{- else }}
+   ServiceMonitor 가 비활성입니다 (dev). prod 에서는 활성을 권장합니다.
+{{- end }}
+   PrometheusRule (recording + alerting) 는 infrastructure/observability/prometheus 의
+   security-log-search.rules.yaml 을 참고하세요. Grafana 대시보드 4종은
+   infrastructure/observability/grafana/provisioning 의 dashboards.yaml 로 auto-load 됩니다.
+
+{{- if not .Values.networkPolicy.enabled }}
+
+5. 주의: NetworkPolicy 가 비활성입니다. 운영 namespace 에서는 활성을 권장합니다 (ISMS-P 2.6).
+{{- end }}
+
+{{- if eq .Values.secrets.dbPassword "change-me" }}
+
+경고: secrets.dbPassword 가 placeholder("change-me") 입니다. 운영에서는
+SealedSecret / ExternalSecret / CSI Secret Store 또는 secrets.existingSecret 으로 교체하세요.
+{{- end }}
