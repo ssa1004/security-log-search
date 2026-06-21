@@ -30,6 +30,33 @@ resources:
     cpu: "2"
     memory: 2Gi
 
+# ISMS-P 2.6 (접근통제) / CIS Kubernetes Benchmark 5.2 — 컨테이너 최소권한.
+# pod / container 둘 다 non-root + readOnlyRootFilesystem 로 기동. 쓰기 경로 (/tmp 의
+# JVM java.io.tmpdir) 는 emptyDir 로 마운트한다. values 로 노출해 env 별 override 가능.
+securityContext:
+  pod:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  container:
+    runAsNonRoot: true
+    runAsUser: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+  # readOnlyRootFilesystem 사용 시 JVM 이 java.io.tmpdir (/tmp) 에 쓰기를 해야 하므로
+  # emptyDir 를 마운트. 추가 쓰기 경로가 생기면 여기에 더한다.
+  writableVolumes:
+    - name: tmp
+      mountPath: /tmp
+
 autoscaling:
   enabled: false
   minReplicas: 3
