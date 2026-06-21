@@ -135,6 +135,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & push API image
+        id: build-api
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
@@ -146,6 +147,7 @@ jobs:
           provenance: true
 
       - name: Build & push Flink streaming image
+        id: build-streaming
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
@@ -211,6 +213,58 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           trivyignores: .trivyignore
+
+      # --- 공급망 서명 + SBOM — 두 이미지 모두 push 된 digest 에 대해 cosign keyless
+      # 서명하고 SPDX SBOM 을 attestation 으로 붙인다. keyless 는 id-token: write(이 job
+      # 에 부여됨) + push 이벤트(이 job 의 if 가이드)에서만 동작하므로 fork PR 에선 안 돈다. ---
+      - name: Install cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+
+      - name: Sign API image (keyless)
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/security-log-search
+          DIGEST: ${{ steps.build-api.outputs.digest }}
+        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+
+      - name: Generate API SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ghcr.io/${{ github.repository_owner }}/security-log-search@${{ steps.build-api.outputs.digest }}
+          format: spdx-json
+          output-file: sbom-api.spdx.json
+
+      - name: Attest API SBOM (keyless)
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/security-log-search
+          DIGEST: ${{ steps.build-api.outputs.digest }}
+        run: |
+          cosign attest --yes \
+            --predicate sbom-api.spdx.json \
+            --type spdxjson \
+            "${IMAGE}@${DIGEST}"
+
+      - name: Sign streaming image (keyless)
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/security-log-search-streaming
+          DIGEST: ${{ steps.build-streaming.outputs.digest }}
+        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+
+      - name: Generate streaming SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ghcr.io/${{ github.repository_owner }}/security-log-search-streaming@${{ steps.build-streaming.outputs.digest }}
+          format: spdx-json
+          output-file: sbom-streaming.spdx.json
+
+      - name: Attest streaming SBOM (keyless)
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/security-log-search-streaming
+          DIGEST: ${{ steps.build-streaming.outputs.digest }}
+        run: |
+          cosign attest --yes \
+            --predicate sbom-streaming.spdx.json \
+            --type spdxjson \
+            "${IMAGE}@${DIGEST}"
 
   helm-validate:
     name: Helm lint + kubeconform
