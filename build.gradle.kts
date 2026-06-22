@@ -20,7 +20,7 @@ plugins {
     // Kover — Kotlin-native 코드 커버리지. 프로덕션 소스가 100% Kotlin 이라 JaCoCo 대신 Kover
     //         를 쓴다. 루트에 적용하면 koverHtmlReport / koverXmlReport 가 하위 모듈 (kover
     //         적용된) 커버리지를 집계한다.
-    id("org.jetbrains.kotlinx.kover") version "0.8.3"
+    id("org.jetbrains.kotlinx.kover") version "0.9.8"
 }
 
 allprojects {

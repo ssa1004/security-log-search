@@ -18,7 +18,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api")
 
     // Resilience4j fallback 어노테이션 — 외부 호출 (OpenSearch / ClickHouse) 보호.
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.4.0")
 
     // Sigma 룰 import — SigmaHQ 의 룰 포맷이 YAML.
     implementation("org.yaml:snakeyaml")
