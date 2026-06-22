@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Kotlin 1.9](https://img.shields.io/badge/Kotlin-1.9-7F52FF.svg?logo=kotlin)](https://kotlinlang.org/)
 [![JVM 21](https://img.shields.io/badge/JVM-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F.svg?logo=springboot)](https://spring.io/projects/spring-boot)
+[![Spring Boot 3.5](https://img.shields.io/badge/Spring%20Boot-3.5.15-6DB33F.svg?logo=springboot)](https://spring.io/projects/spring-boot)
 [![Apache Flink 1.18](https://img.shields.io/badge/Apache%20Flink-1.18.1-E6526F.svg?logo=apacheflink)](https://flink.apache.org/)
 [![OpenSearch 2.x](https://img.shields.io/badge/OpenSearch-2.x-005EB8.svg?logo=opensearch)](https://opensearch.org/)
 [![ClickHouse](https://img.shields.io/badge/ClickHouse-FFCC01.svg?logo=clickhouse&logoColor=black)](https://clickhouse.com/)
@@ -32,7 +32,7 @@
 > - 15 ADRs covering ECS/OCSF, dual sink, Flink vs Kafka Streams, Sigma import,
 >   ISMS-P control mapping and observability — see [docs/adr/](docs/adr/).
 >
-> **Tech stack**: Kotlin 1.9 (JVM 21), Spring Boot 3.4, Apache Flink 1.18, Kafka,
+> **Tech stack**: Kotlin 1.9 (JVM 21), Spring Boot 3.5, Apache Flink 1.18, Kafka,
 > OpenSearch 2.x, ClickHouse 24.x, PostgreSQL 16, Gradle 8, Helm + ArgoCD.
 >
 > **Language note**: the production source set is **100% Kotlin** (130 files, 0 Java).
@@ -184,7 +184,7 @@ sequenceDiagram
   130개 파일 / Java 0개). 테스트는 현재 혼재 — Kotlin 9개 + Java 26개 (총 35개). domain /
   application / streaming 테스트는 아직 Java 이며 Kotlin 이관은 보류 상태 (Flink 통합 테스트는
   아래 1.19 업그레이드와 함께 복귀 예정).
-- **Framework**: Spring Boot 3.4
+- **Framework**: Spring Boot 3.5
 - **Storage**:
   - PostgreSQL 16 (control plane: tenants / alert_rules / alerts / audit_entries / idempotency)
   - OpenSearch 2.x (full-text 검색, 운영자 ad-hoc query)
