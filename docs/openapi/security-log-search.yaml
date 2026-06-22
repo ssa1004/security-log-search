@@ -1,1241 +1,1241 @@
-openapi: 3.0.1
-info:
-  title: OpenAPI definition
-  version: v0
-servers:
-- url: http://localhost:8080
-  description: Generated server url
-paths:
-  /api/v1/alert-rules/{ruleId}:
-    put:
-      tags:
-      - alert-rule-controller
-      operationId: update
-      parameters:
-      - name: ruleId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AlertRuleRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/AlertRule"
-    delete:
-      tags:
-      - alert-rule-controller
-      operationId: delete
-      parameters:
-      - name: ruleId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-  /api/v1/tenants:
-    post:
-      tags:
-      - tenant-controller
-      operationId: onboard
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TenantOnboardRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/TenantResponse"
-  /api/v1/sigma-rules:
-    get:
-      tags:
-      - sigma-rule-controller
-      operationId: list
-      parameters:
-      - name: tenantId
-        in: query
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SigmaRuleResponse"
-    post:
-      tags:
-      - sigma-rule-controller
-      operationId: importSigma
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SigmaImportRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/SigmaImportResponse"
-  /api/v1/search:
-    post:
-      tags:
-      - search-controller
-      operationId: search
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SearchRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/SearchResponse"
-  /api/v1/events:
-    post:
-      tags:
-      - ingest-controller
-      operationId: ingest
-      parameters:
-      - name: Idempotency-Key
-        in: header
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/IngestRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/IngestResponse"
-  /api/v1/events/k8s-audit:
-    post:
-      tags:
-      - source-ingest-controller
-      operationId: k8sAudit
-      parameters:
-      - name: Idempotency-Key
-        in: header
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SourceIngestRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/IngestResponse"
-  /api/v1/events/cloudtrail:
-    post:
-      tags:
-      - source-ingest-controller
-      operationId: cloudtrail
-      parameters:
-      - name: Idempotency-Key
-        in: header
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SourceIngestRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/IngestResponse"
-  /api/v1/alerts/{alertId}/resolve:
-    post:
-      tags:
-      - alert-controller
-      operationId: resolve
-      parameters:
-      - name: alertId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/AlertResponse"
-  /api/v1/alerts/{alertId}/false-positive:
-    post:
-      tags:
-      - alert-controller
-      operationId: markFalsePositive
-      parameters:
-      - name: alertId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/AlertResponse"
-  /api/v1/alerts/{alertId}/ack:
-    post:
-      tags:
-      - alert-controller
-      operationId: acknowledge
-      parameters:
-      - name: alertId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/AlertResponse"
-  /api/v1/alert-rules:
-    post:
-      tags:
-      - alert-rule-controller
-      operationId: create
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AlertRuleRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/AlertRule"
-  /api/v1/admin/indices/{tenantId}:
-    post:
-      tags:
-      - index-admin-controller
-      operationId: create_1
-      parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-  /api/v1/admin/indices/{tenantId}/rollover:
-    post:
-      tags:
-      - index-admin-controller
-      operationId: rollover
-      parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/RolloverResult"
-  /api/v1/admin/indices/{tenantId}/ilm:
-    post:
-      tags:
-      - index-admin-controller
-      operationId: applyIlm
-      parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-  /api/v1/stats:
-    get:
-      tags:
-      - stats-controller
-      operationId: stats
-      parameters:
-      - name: tenantId
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: from
-        in: query
-        required: true
-        schema:
-          type: string
-          format: date-time
-      - name: to
-        in: query
-        required: true
-        schema:
-          type: string
-          format: date-time
-      - name: bucket
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - FIVE_MINUTES
-          - ONE_HOUR
-          - ONE_DAY
-          default: ONE_HOUR
-      - name: groupByField
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: topN
-        in: query
-        required: false
-        schema:
-          maximum: 1000
-          minimum: 1
-          type: integer
-          format: int32
-          default: 10
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/StatsResponse"
-  /api/v1/audit:
-    get:
-      tags:
-      - audit-controller
-      operationId: query
-      parameters:
-      - name: tenantId
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: actor
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: action
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - INGEST
-          - SEARCH
-          - STATS_QUERY
-          - RULE_CREATED
-          - RULE_UPDATED
-          - RULE_DELETED
-          - ALERT_FIRED
-          - ALERT_ACKNOWLEDGED
-          - ALERT_RESOLVED
-          - ALERT_FALSE_POSITIVE
-          - INDEX_CREATED
-          - INDEX_ROLLOVER
-          - ALIAS_SWAP
-          - ILM_POLICY_APPLIED
-          - TENANT_ONBOARDED
-          - TENANT_DEACTIVATED
-          - CROSS_TENANT_ACCESS
-          - LOGIN_OPERATOR
-          - EXPORT_RESULTS
-      - name: from
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date-time
-      - name: to
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date-time
-      - name: size
-        in: query
-        required: false
-        schema:
-          maximum: 1000
-          minimum: 1
-          type: integer
-          format: int32
-          default: 100
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AuditEntryResponse"
-  /api/v1/alerts:
-    get:
-      tags:
-      - alert-controller
-      operationId: list_1
-      parameters:
-      - name: tenantId
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: status
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - OPEN
-          - ACKNOWLEDGED
-          - RESOLVED
-          - FALSE_POSITIVE
-      - name: from
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date-time
-      - name: to
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date-time
-      - name: size
-        in: query
-        required: false
-        schema:
-          maximum: 500
-          minimum: 1
-          type: integer
-          format: int32
-          default: 50
-      - name: after
-        in: query
-        required: false
-        schema:
-          type: string
-          format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/AlertPageResponse"
-  /api/v1/tenants/{tenantId}:
-    delete:
-      tags:
-      - tenant-controller
-      operationId: deactivate
-      parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
 components:
   schemas:
-    AlertRuleRequest:
-      required:
-      - enabled
-      - groupByField
-      - name
-      - severity
-      - tenantId
-      - threshold
-      - type
-      - window
-      type: object
+    AlertPageResponse:
       properties:
-        tenantId:
+        alerts:
+          items:
+            $ref: '#/components/schemas/AlertResponse'
+          type: array
+        nextCursor:
+          format: uuid
           type: string
-        name:
+      required:
+        - alerts
+      type: object
+    AlertResponse:
+      properties:
+        alertId:
+          format: uuid
           type: string
-        description:
-          type: string
-        type:
-          type: string
-          enum:
-          - THRESHOLD
-          - SEQUENCE
-        filterCategory:
-          type: string
-        filterAction:
-          type: string
-        filterOutcome:
+        firedAt:
+          format: date-time
           type: string
         groupByField:
           type: string
-        threshold:
-          minimum: 1
-          type: integer
-          format: int32
-        window:
-          type: object
-          properties:
-            seconds:
-              type: integer
-              format: int64
-            zero:
-              type: boolean
-            nano:
-              type: integer
-              format: int32
-            negative:
-              type: boolean
-            positive:
-              type: boolean
-            units:
-              type: array
-              items:
-                type: object
-                properties:
-                  durationEstimated:
-                    type: boolean
-                  duration:
-                    type: object
-                    properties:
-                      seconds:
-                        type: integer
-                        format: int64
-                      zero:
-                        type: boolean
-                      nano:
-                        type: integer
-                        format: int32
-                      negative:
-                        type: boolean
-                      positive:
-                        type: boolean
-                  timeBased:
-                    type: boolean
-                  dateBased:
-                    type: boolean
-        severity:
+        groupKey:
           type: string
-          enum:
-          - INFO
-          - LOW
-          - MEDIUM
-          - HIGH
-          - CRITICAL
-        enabled:
-          type: boolean
-    AlertRule:
-      required:
-      - createdAt
-      - enabled
-      - groupByField
-      - name
-      - ruleId
-      - severity
-      - tenantId
-      - threshold
-      - type
-      - updatedAt
-      - window
-      type: object
-      properties:
+        matchedCount:
+          format: int32
+          type: integer
+        message:
+          type: string
         ruleId:
-          type: string
           format: uuid
+          type: string
+        ruleName:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
         tenantId:
-          $ref: "#/components/schemas/TenantId"
-        name:
+          type: string
+        triggeringEventIds:
+          items:
+            format: uuid
+            type: string
+          type: array
+        windowEnd:
+          format: date-time
+          type: string
+        windowStart:
+          format: date-time
+          type: string
+      required:
+        - alertId
+        - firedAt
+        - groupByField
+        - matchedCount
+        - ruleId
+        - ruleName
+        - severity
+        - status
+        - tenantId
+        - triggeringEventIds
+        - windowEnd
+        - windowStart
+      type: object
+    AlertRule:
+      properties:
+        createdAt:
+          format: date-time
           type: string
         description:
           type: string
-        type:
-          type: string
-          enum:
-          - THRESHOLD
-          - SEQUENCE
-        filterCategory:
-          type: string
+        enabled:
+          type: boolean
         filterAction:
+          type: string
+        filterCategory:
           type: string
         filterOutcome:
           type: string
         groupByField:
           type: string
+        name:
+          type: string
+        ruleId:
+          format: uuid
+          type: string
+        severity:
+          enum:
+            - CRITICAL
+            - HIGH
+            - INFO
+            - LOW
+            - MEDIUM
+          type: string
+        tenantId:
+          $ref: '#/components/schemas/TenantId'
         threshold:
-          type: integer
           format: int32
+          type: integer
+        type:
+          enum:
+            - SEQUENCE
+            - THRESHOLD
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
         window:
-          type: object
           properties:
-            seconds:
-              type: integer
-              format: int64
-            zero:
-              type: boolean
             nano:
-              type: integer
               format: int32
+              type: integer
             negative:
               type: boolean
             positive:
               type: boolean
+            seconds:
+              format: int64
+              type: integer
             units:
-              type: array
               items:
-                type: object
                 properties:
+                  dateBased:
+                    type: boolean
                   durationEstimated:
                     type: boolean
                   timeBased:
                     type: boolean
-                  dateBased:
-                    type: boolean
-        severity:
+                type: object
+              type: array
+            zero:
+              type: boolean
+          type: object
+      required:
+        - createdAt
+        - enabled
+        - groupByField
+        - name
+        - ruleId
+        - severity
+        - tenantId
+        - threshold
+        - type
+        - updatedAt
+        - window
+      type: object
+    AlertRuleRequest:
+      properties:
+        description:
           type: string
-          enum:
-          - INFO
-          - LOW
-          - MEDIUM
-          - HIGH
-          - CRITICAL
         enabled:
           type: boolean
-        createdAt:
+        filterAction:
           type: string
-          format: date-time
-        updatedAt:
+        filterCategory:
           type: string
-          format: date-time
-    TenantId:
-      required:
-      - value
-      type: object
-      properties:
-        value:
+        filterOutcome:
           type: string
-    TenantOnboardRequest:
-      required:
-      - displayName
-      - hotRetention
-      - piiPolicy
-      - retention
-      - tenantId
-      type: object
-      properties:
-        tenantId:
+        groupByField:
           type: string
-        displayName:
+        name:
           type: string
-        retention:
-          type: object
-          properties:
-            seconds:
-              type: integer
-              format: int64
-            zero:
-              type: boolean
-            nano:
-              type: integer
-              format: int32
-            negative:
-              type: boolean
-            positive:
-              type: boolean
-            units:
-              type: array
-              items:
-                type: object
-                properties:
-                  durationEstimated:
-                    type: boolean
-                  duration:
-                    type: object
-                    properties:
-                      seconds:
-                        type: integer
-                        format: int64
-                      zero:
-                        type: boolean
-                      nano:
-                        type: integer
-                        format: int32
-                      negative:
-                        type: boolean
-                      positive:
-                        type: boolean
-                  timeBased:
-                    type: boolean
-                  dateBased:
-                    type: boolean
-        hotRetention:
-          type: object
-          properties:
-            seconds:
-              type: integer
-              format: int64
-            zero:
-              type: boolean
-            nano:
-              type: integer
-              format: int32
-            negative:
-              type: boolean
-            positive:
-              type: boolean
-            units:
-              type: array
-              items:
-                type: object
-                properties:
-                  durationEstimated:
-                    type: boolean
-                  duration:
-                    type: object
-                    properties:
-                      seconds:
-                        type: integer
-                        format: int64
-                      zero:
-                        type: boolean
-                      nano:
-                        type: integer
-                        format: int32
-                      negative:
-                        type: boolean
-                      positive:
-                        type: boolean
-                  timeBased:
-                    type: boolean
-                  dateBased:
-                    type: boolean
-        piiPolicy:
-          type: string
+        severity:
           enum:
-          - NONE
-          - IP_ONLY
-          - STRICT
-    TenantResponse:
-      required:
-      - active
-      - displayName
-      - hotRetention
-      - onboardedAt
-      - piiPolicy
-      - retention
-      - tenantId
-      type: object
-      properties:
+            - CRITICAL
+            - HIGH
+            - INFO
+            - LOW
+            - MEDIUM
+          type: string
         tenantId:
           type: string
-        displayName:
-          type: string
-        retention:
-          type: object
-          properties:
-            seconds:
-              type: integer
-              format: int64
-            zero:
-              type: boolean
-            nano:
-              type: integer
-              format: int32
-            negative:
-              type: boolean
-            positive:
-              type: boolean
-            units:
-              type: array
-              items:
-                type: object
-                properties:
-                  durationEstimated:
-                    type: boolean
-                  timeBased:
-                    type: boolean
-                  dateBased:
-                    type: boolean
-        hotRetention:
-          type: object
-          properties:
-            seconds:
-              type: integer
-              format: int64
-            zero:
-              type: boolean
-            nano:
-              type: integer
-              format: int32
-            negative:
-              type: boolean
-            positive:
-              type: boolean
-            units:
-              type: array
-              items:
-                type: object
-                properties:
-                  durationEstimated:
-                    type: boolean
-                  timeBased:
-                    type: boolean
-                  dateBased:
-                    type: boolean
-        piiPolicy:
-          type: string
-        onboardedAt:
-          type: string
-          format: date-time
-        active:
-          type: boolean
-    SigmaImportRequest:
-      required:
-      - overwriteByTitle
-      - tenantId
-      - yaml
-      type: object
-      properties:
-        tenantId:
-          pattern: "^[a-z0-9][a-z0-9-]{0,30}[a-z0-9]$"
-          type: string
-        yaml:
-          maxLength: 5242880
-          minLength: 0
-          type: string
-        overwriteByTitle:
-          type: boolean
-    MappingNote:
-      required:
-      - alertRuleId
-      - sigmaId
-      - unsupported
-      type: object
-      properties:
-        alertRuleId:
-          type: string
-          format: uuid
-        sigmaId:
-          type: string
-        unsupported:
-          type: array
-          items:
-            type: string
-    RuleSummary:
-      required:
-      - alertRuleId
-      - title
-      type: object
-      properties:
-        alertRuleId:
-          type: string
-          format: uuid
-        sigmaId:
-          type: string
-        title:
-          type: string
-        level:
-          type: string
-    SigmaImportResponse:
-      required:
-      - importedCount
-      - mappingNotes
-      - rules
-      type: object
-      properties:
-        importedCount:
-          type: integer
+        threshold:
           format: int32
-        rules:
-          type: array
-          items:
-            $ref: "#/components/schemas/RuleSummary"
-        mappingNotes:
-          type: array
-          items:
-            $ref: "#/components/schemas/MappingNote"
-    SearchRequest:
-      required:
-      - tenantId
-      type: object
-      properties:
-        tenantId:
-          type: string
-        query:
-          type: string
-        filters:
-          type: object
-          additionalProperties:
-            type: string
-        from:
-          type: string
-          format: date-time
-        to:
-          type: string
-          format: date-time
-        facets:
-          type: array
-          items:
-            type: string
-        facetSize:
-          maximum: 100
-          minimum: 0
-          type: integer
-          format: int32
-        size:
-          maximum: 1000
           minimum: 1
           type: integer
-          format: int32
-        cursor:
+        type:
+          enum:
+            - SEQUENCE
+            - THRESHOLD
           type: string
-    EventSummary:
+        window:
+          properties:
+            nano:
+              format: int32
+              type: integer
+            negative:
+              type: boolean
+            positive:
+              type: boolean
+            seconds:
+              format: int64
+              type: integer
+            units:
+              items:
+                properties:
+                  dateBased:
+                    type: boolean
+                  duration:
+                    properties:
+                      nano:
+                        format: int32
+                        type: integer
+                      negative:
+                        type: boolean
+                      positive:
+                        type: boolean
+                      seconds:
+                        format: int64
+                        type: integer
+                      zero:
+                        type: boolean
+                    type: object
+                  durationEstimated:
+                    type: boolean
+                  timeBased:
+                    type: boolean
+                type: object
+              type: array
+            zero:
+              type: boolean
+          type: object
       required:
-      - eventId
-      - severity
-      - tenantId
-      - timestamp
+        - enabled
+        - groupByField
+        - name
+        - severity
+        - tenantId
+        - threshold
+        - type
+        - window
       type: object
+    AuditEntryResponse:
       properties:
-        eventId:
-          type: string
-          format: uuid
-        tenantId:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        severity:
-          type: string
-        category:
-          type: string
         action:
           type: string
-        outcome:
+        actor:
+          type: string
+        actorRole:
+          type: string
+        details:
+          additionalProperties:
+            type: string
+          type: object
+        entryId:
+          format: uuid
+          type: string
+        occurredAt:
+          format: date-time
           type: string
         sourceIp:
           type: string
+        targetId:
+          type: string
+        targetType:
+          type: string
+        tenantId:
+          type: string
+      required:
+        - action
+        - actor
+        - details
+        - entryId
+        - occurredAt
+        - tenantId
+      type: object
+    EventSummary:
+      properties:
+        action:
+          type: string
+        category:
+          type: string
         destinationIp:
           type: string
-        userName:
+        eventId:
+          format: uuid
           type: string
         hostName:
           type: string
         message:
           type: string
-    SearchResponse:
-      required:
-      - facets
-      - hits
-      - totalHits
-      type: object
-      properties:
-        hits:
-          type: array
-          items:
-            $ref: "#/components/schemas/EventSummary"
-        totalHits:
-          type: integer
-          format: int64
-        facets:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: integer
-              format: int64
-        nextCursor:
-          type: string
-    IngestRequest:
-      required:
-      - payload
-      - schema
-      - source
-      - tenantId
-      type: object
-      properties:
-        tenantId:
-          type: string
-        source:
-          type: string
-        schema:
-          type: string
-        payload:
-          type: object
-          additionalProperties:
-            type: object
-        occurredAt:
-          type: string
-          format: date-time
-    IngestResponse:
-      required:
-      - duplicate
-      - eventId
-      type: object
-      properties:
-        eventId:
-          type: string
-          format: uuid
-        duplicate:
-          type: boolean
-    SourceIngestRequest:
-      required:
-      - payload
-      - tenantId
-      type: object
-      properties:
-        tenantId:
-          type: string
-        payload:
-          type: object
-          additionalProperties:
-            type: object
-        occurredAt:
-          type: string
-          format: date-time
-    AlertResponse:
-      required:
-      - alertId
-      - firedAt
-      - groupByField
-      - matchedCount
-      - ruleId
-      - ruleName
-      - severity
-      - status
-      - tenantId
-      - triggeringEventIds
-      - windowEnd
-      - windowStart
-      type: object
-      properties:
-        alertId:
-          type: string
-          format: uuid
-        tenantId:
-          type: string
-        ruleId:
-          type: string
-          format: uuid
-        ruleName:
+        outcome:
           type: string
         severity:
           type: string
-        groupKey:
+        sourceIp:
           type: string
-        groupByField:
+        tenantId:
           type: string
-        matchedCount:
-          type: integer
-          format: int32
-        windowStart:
-          type: string
+        timestamp:
           format: date-time
-        windowEnd:
           type: string
+        userName:
+          type: string
+      required:
+        - eventId
+        - severity
+        - tenantId
+        - timestamp
+      type: object
+    IngestRequest:
+      properties:
+        occurredAt:
           format: date-time
-        firedAt:
           type: string
-          format: date-time
-        status:
+        payload:
+          additionalProperties:
+            type: object
+          type: object
+        schema:
           type: string
-        triggeringEventIds:
-          type: array
+        source:
+          type: string
+        tenantId:
+          type: string
+      required:
+        - payload
+        - schema
+        - source
+        - tenantId
+      type: object
+    IngestResponse:
+      properties:
+        duplicate:
+          type: boolean
+        eventId:
+          format: uuid
+          type: string
+      required:
+        - duplicate
+        - eventId
+      type: object
+    MappingNote:
+      properties:
+        alertRuleId:
+          format: uuid
+          type: string
+        sigmaId:
+          type: string
+        unsupported:
           items:
             type: string
-            format: uuid
-        message:
-          type: string
-    RolloverResult:
+          type: array
       required:
-      - rolledOver
+        - alertRuleId
+        - sigmaId
+        - unsupported
       type: object
+    RolloverResult:
       properties:
-        rolledOver:
-          type: boolean
-        oldIndex:
-          type: string
         newIndex:
           type: string
-    StatsResponse:
-      required:
-      - series
-      - topGroups
-      type: object
-      properties:
-        series:
-          type: array
-          items:
-            $ref: "#/components/schemas/TimePoint"
-        topGroups:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              $ref: "#/components/schemas/TimePoint"
-    TimePoint:
-      required:
-      - count
-      - p95LatencyMs
-      - timestamp
-      type: object
-      properties:
-        timestamp:
+        oldIndex:
           type: string
-          format: date-time
-        count:
-          type: integer
-          format: int64
-        p95LatencyMs:
-          type: number
-          format: double
-    SigmaRuleResponse:
+        rolledOver:
+          type: boolean
       required:
-      - id
-      - importedAt
-      - references
-      - tags
-      - title
+        - rolledOver
       type: object
+    RuleSummary:
       properties:
-        id:
-          type: string
-        title:
+        alertRuleId:
+          format: uuid
           type: string
         level:
           type: string
-        status:
+        sigmaId:
           type: string
+        title:
+          type: string
+      required:
+        - alertRuleId
+        - title
+      type: object
+    SearchRequest:
+      properties:
+        cursor:
+          type: string
+        facetSize:
+          format: int32
+          maximum: 100
+          minimum: 0
+          type: integer
+        facets:
+          items:
+            type: string
+          type: array
+        filters:
+          additionalProperties:
+            type: string
+          type: object
+        from:
+          format: date-time
+          type: string
+        query:
+          type: string
+        size:
+          format: int32
+          maximum: 1000
+          minimum: 1
+          type: integer
+        tenantId:
+          type: string
+        to:
+          format: date-time
+          type: string
+      required:
+        - tenantId
+      type: object
+    SearchResponse:
+      properties:
+        facets:
+          additionalProperties:
+            additionalProperties:
+              format: int64
+              type: integer
+            type: object
+          type: object
+        hits:
+          items:
+            $ref: '#/components/schemas/EventSummary'
+          type: array
+        nextCursor:
+          type: string
+        totalHits:
+          format: int64
+          type: integer
+      required:
+        - facets
+        - hits
+        - totalHits
+      type: object
+    SigmaImportRequest:
+      properties:
+        overwriteByTitle:
+          type: boolean
+        tenantId:
+          pattern: ^[a-z0-9][a-z0-9-]{0,30}[a-z0-9]$
+          type: string
+        yaml:
+          maxLength: 5242880
+          minLength: 0
+          type: string
+      required:
+        - overwriteByTitle
+        - tenantId
+        - yaml
+      type: object
+    SigmaImportResponse:
+      properties:
+        importedCount:
+          format: int32
+          type: integer
+        mappingNotes:
+          items:
+            $ref: '#/components/schemas/MappingNote'
+          type: array
+        rules:
+          items:
+            $ref: '#/components/schemas/RuleSummary'
+          type: array
+      required:
+        - importedCount
+        - mappingNotes
+        - rules
+      type: object
+    SigmaRuleResponse:
+      properties:
         author:
           type: string
         description:
           type: string
-        tags:
-          type: array
-          items:
-            type: string
-        references:
-          type: array
-          items:
-            type: string
+        id:
+          type: string
+        importedAt:
+          format: date-time
+          type: string
+        level:
+          type: string
         logsourceCategory:
           type: string
         logsourceProduct:
           type: string
-        importedAt:
+        references:
+          items:
+            type: string
+          type: array
+        status:
           type: string
-          format: date-time
-    AuditEntryResponse:
+        tags:
+          items:
+            type: string
+          type: array
+        title:
+          type: string
       required:
-      - action
-      - actor
-      - details
-      - entryId
-      - occurredAt
-      - tenantId
+        - id
+        - importedAt
+        - references
+        - tags
+        - title
       type: object
+    SourceIngestRequest:
       properties:
-        entryId:
+        occurredAt:
+          format: date-time
           type: string
-          format: uuid
+        payload:
+          additionalProperties:
+            type: object
+          type: object
         tenantId:
           type: string
-        occurredAt:
-          type: string
-          format: date-time
-        actor:
-          type: string
-        actorRole:
-          type: string
-        action:
-          type: string
-        targetType:
-          type: string
-        targetId:
-          type: string
-        sourceIp:
-          type: string
-        details:
-          type: object
-          additionalProperties:
-            type: string
-    AlertPageResponse:
       required:
-      - alerts
+        - payload
+        - tenantId
       type: object
+    StatsResponse:
       properties:
-        alerts:
-          type: array
+        series:
           items:
-            $ref: "#/components/schemas/AlertResponse"
-        nextCursor:
+            $ref: '#/components/schemas/TimePoint'
+          type: array
+        topGroups:
+          additionalProperties:
+            items:
+              $ref: '#/components/schemas/TimePoint'
+            type: array
+          type: object
+      required:
+        - series
+        - topGroups
+      type: object
+    TenantId:
+      properties:
+        value:
           type: string
-          format: uuid
+      required:
+        - value
+      type: object
+    TenantOnboardRequest:
+      properties:
+        displayName:
+          type: string
+        hotRetention:
+          properties:
+            nano:
+              format: int32
+              type: integer
+            negative:
+              type: boolean
+            positive:
+              type: boolean
+            seconds:
+              format: int64
+              type: integer
+            units:
+              items:
+                properties:
+                  dateBased:
+                    type: boolean
+                  duration:
+                    properties:
+                      nano:
+                        format: int32
+                        type: integer
+                      negative:
+                        type: boolean
+                      positive:
+                        type: boolean
+                      seconds:
+                        format: int64
+                        type: integer
+                      zero:
+                        type: boolean
+                    type: object
+                  durationEstimated:
+                    type: boolean
+                  timeBased:
+                    type: boolean
+                type: object
+              type: array
+            zero:
+              type: boolean
+          type: object
+        piiPolicy:
+          enum:
+            - IP_ONLY
+            - NONE
+            - STRICT
+          type: string
+        retention:
+          properties:
+            nano:
+              format: int32
+              type: integer
+            negative:
+              type: boolean
+            positive:
+              type: boolean
+            seconds:
+              format: int64
+              type: integer
+            units:
+              items:
+                properties:
+                  dateBased:
+                    type: boolean
+                  duration:
+                    properties:
+                      nano:
+                        format: int32
+                        type: integer
+                      negative:
+                        type: boolean
+                      positive:
+                        type: boolean
+                      seconds:
+                        format: int64
+                        type: integer
+                      zero:
+                        type: boolean
+                    type: object
+                  durationEstimated:
+                    type: boolean
+                  timeBased:
+                    type: boolean
+                type: object
+              type: array
+            zero:
+              type: boolean
+          type: object
+        tenantId:
+          type: string
+      required:
+        - displayName
+        - hotRetention
+        - piiPolicy
+        - retention
+        - tenantId
+      type: object
+    TenantResponse:
+      properties:
+        active:
+          type: boolean
+        displayName:
+          type: string
+        hotRetention:
+          properties:
+            nano:
+              format: int32
+              type: integer
+            negative:
+              type: boolean
+            positive:
+              type: boolean
+            seconds:
+              format: int64
+              type: integer
+            units:
+              items:
+                properties:
+                  dateBased:
+                    type: boolean
+                  durationEstimated:
+                    type: boolean
+                  timeBased:
+                    type: boolean
+                type: object
+              type: array
+            zero:
+              type: boolean
+          type: object
+        onboardedAt:
+          format: date-time
+          type: string
+        piiPolicy:
+          type: string
+        retention:
+          properties:
+            nano:
+              format: int32
+              type: integer
+            negative:
+              type: boolean
+            positive:
+              type: boolean
+            seconds:
+              format: int64
+              type: integer
+            units:
+              items:
+                properties:
+                  dateBased:
+                    type: boolean
+                  durationEstimated:
+                    type: boolean
+                  timeBased:
+                    type: boolean
+                type: object
+              type: array
+            zero:
+              type: boolean
+          type: object
+        tenantId:
+          type: string
+      required:
+        - active
+        - displayName
+        - hotRetention
+        - onboardedAt
+        - piiPolicy
+        - retention
+        - tenantId
+      type: object
+    TimePoint:
+      properties:
+        count:
+          format: int64
+          type: integer
+        p95LatencyMs:
+          format: double
+          type: number
+        timestamp:
+          format: date-time
+          type: string
+      required:
+        - count
+        - p95LatencyMs
+        - timestamp
+      type: object
+info:
+  title: OpenAPI definition
+  version: v0
+openapi: 3.0.1
+paths:
+  /api/v1/admin/indices/{tenantId}:
+    post:
+      operationId: create_1
+      parameters:
+        - in: path
+          name: tenantId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+      tags:
+        - index-admin-controller
+  /api/v1/admin/indices/{tenantId}/ilm:
+    post:
+      operationId: applyIlm
+      parameters:
+        - in: path
+          name: tenantId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+      tags:
+        - index-admin-controller
+  /api/v1/admin/indices/{tenantId}/rollover:
+    post:
+      operationId: rollover
+      parameters:
+        - in: path
+          name: tenantId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/RolloverResult'
+          description: OK
+      tags:
+        - index-admin-controller
+  /api/v1/alert-rules:
+    post:
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertRuleRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+          description: OK
+      tags:
+        - alert-rule-controller
+  /api/v1/alert-rules/{ruleId}:
+    delete:
+      operationId: delete
+      parameters:
+        - in: path
+          name: ruleId
+          required: true
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          description: OK
+      tags:
+        - alert-rule-controller
+    put:
+      operationId: update
+      parameters:
+        - in: path
+          name: ruleId
+          required: true
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertRuleRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+          description: OK
+      tags:
+        - alert-rule-controller
+  /api/v1/alerts:
+    get:
+      operationId: list_1
+      parameters:
+        - in: query
+          name: tenantId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            enum:
+              - ACKNOWLEDGED
+              - FALSE_POSITIVE
+              - OPEN
+              - RESOLVED
+            type: string
+        - in: query
+          name: from
+          required: false
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: to
+          required: false
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: size
+          required: false
+          schema:
+            default: 50
+            format: int32
+            maximum: 500
+            minimum: 1
+            type: integer
+        - in: query
+          name: after
+          required: false
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AlertPageResponse'
+          description: OK
+      tags:
+        - alert-controller
+  /api/v1/alerts/{alertId}/ack:
+    post:
+      operationId: acknowledge
+      parameters:
+        - in: path
+          name: alertId
+          required: true
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AlertResponse'
+          description: OK
+      tags:
+        - alert-controller
+  /api/v1/alerts/{alertId}/false-positive:
+    post:
+      operationId: markFalsePositive
+      parameters:
+        - in: path
+          name: alertId
+          required: true
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AlertResponse'
+          description: OK
+      tags:
+        - alert-controller
+  /api/v1/alerts/{alertId}/resolve:
+    post:
+      operationId: resolve
+      parameters:
+        - in: path
+          name: alertId
+          required: true
+          schema:
+            format: uuid
+            type: string
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AlertResponse'
+          description: OK
+      tags:
+        - alert-controller
+  /api/v1/audit:
+    get:
+      operationId: query
+      parameters:
+        - in: query
+          name: tenantId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: actor
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: action
+          required: false
+          schema:
+            enum:
+              - ALERT_ACKNOWLEDGED
+              - ALERT_FALSE_POSITIVE
+              - ALERT_FIRED
+              - ALERT_RESOLVED
+              - ALIAS_SWAP
+              - CROSS_TENANT_ACCESS
+              - EXPORT_RESULTS
+              - ILM_POLICY_APPLIED
+              - INDEX_CREATED
+              - INDEX_ROLLOVER
+              - INGEST
+              - LOGIN_OPERATOR
+              - RULE_CREATED
+              - RULE_DELETED
+              - RULE_UPDATED
+              - SEARCH
+              - STATS_QUERY
+              - TENANT_DEACTIVATED
+              - TENANT_ONBOARDED
+            type: string
+        - in: query
+          name: from
+          required: false
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: to
+          required: false
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: size
+          required: false
+          schema:
+            default: 100
+            format: int32
+            maximum: 1000
+            minimum: 1
+            type: integer
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                items:
+                  $ref: '#/components/schemas/AuditEntryResponse'
+                type: array
+          description: OK
+      tags:
+        - audit-controller
+  /api/v1/events:
+    post:
+      operationId: ingest
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+          description: OK
+      tags:
+        - ingest-controller
+  /api/v1/events/cloudtrail:
+    post:
+      operationId: cloudtrail
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceIngestRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+          description: OK
+      tags:
+        - source-ingest-controller
+  /api/v1/events/k8s-audit:
+    post:
+      operationId: k8sAudit
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceIngestRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+          description: OK
+      tags:
+        - source-ingest-controller
+  /api/v1/search:
+    post:
+      operationId: search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+          description: OK
+      tags:
+        - search-controller
+  /api/v1/sigma-rules:
+    get:
+      operationId: list
+      parameters:
+        - in: query
+          name: tenantId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                items:
+                  $ref: '#/components/schemas/SigmaRuleResponse'
+                type: array
+          description: OK
+      tags:
+        - sigma-rule-controller
+    post:
+      operationId: importSigma
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigmaImportRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SigmaImportResponse'
+          description: OK
+      tags:
+        - sigma-rule-controller
+  /api/v1/stats:
+    get:
+      operationId: stats
+      parameters:
+        - in: query
+          name: tenantId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: from
+          required: true
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: to
+          required: true
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: bucket
+          required: false
+          schema:
+            default: ONE_HOUR
+            enum:
+              - FIVE_MINUTES
+              - ONE_DAY
+              - ONE_HOUR
+            type: string
+        - in: query
+          name: groupByField
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: topN
+          required: false
+          schema:
+            default: 10
+            format: int32
+            maximum: 1000
+            minimum: 1
+            type: integer
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+          description: OK
+      tags:
+        - stats-controller
+  /api/v1/tenants:
+    post:
+      operationId: onboard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantOnboardRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+          description: OK
+      tags:
+        - tenant-controller
+  /api/v1/tenants/{tenantId}:
+    delete:
+      operationId: deactivate
+      parameters:
+        - in: path
+          name: tenantId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+      tags:
+        - tenant-controller
+servers:
+  - description: Generated server url
+    url: http://localhost:8080
