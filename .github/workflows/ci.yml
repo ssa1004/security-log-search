@@ -74,6 +74,65 @@ jobs:
           name: coverage-report
           path: build/reports/kover/
 
+  openapi-drift:
+    name: OpenAPI spec drift gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Build boot jar
+        run: ./gradlew --no-daemon :security-bootstrap:bootJar
+
+      # 앱은 외부 인프라 없이 부팅된다 (기본 profile: H2 in-memory, OpenSearch/ClickHouse
+      # disabled, Kafka lazy) -> service container 불필요. Kotlin top-level main 은
+      # ...ApplicationKt 로 컴파일되므로 PropertiesLauncher 로 loader.main 을 override.
+      - name: Regenerate OpenAPI spec (zero-infra boot) and diff-gate
+        run: |
+          set -euo pipefail
+          PORT=18099
+          JAR=security-bootstrap/build/libs/security-bootstrap-0.1.0-boot.jar
+          java -Dloader.main=com.example.security.SecurityLogSearchApplicationKt \
+               -cp "$JAR" org.springframework.boot.loader.launch.PropertiesLauncher \
+               --server.port="$PORT" > /tmp/sls-boot.log 2>&1 &
+          APP_PID=$!
+          trap 'kill "$APP_PID" 2>/dev/null || true' EXIT
+
+          # health 가 UP 이 될 때까지 폴링 (counter + sleep). timeout 미사용.
+          up=0
+          for _ in $(seq 1 120); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${PORT}/actuator/health" || true)" = "200" ]; then
+              up=1; break
+            fi
+            if ! kill -0 "$APP_PID" 2>/dev/null; then
+              echo "::error::app process exited before becoming healthy"; tail -50 /tmp/sls-boot.log; exit 1
+            fi
+            sleep 1
+          done
+          if [ "$up" != "1" ]; then
+            echo "::error::app did not become healthy in time"; tail -50 /tmp/sls-boot.log; exit 1
+          fi
+
+          # spec fetch + servers[0].url 을 8080 으로 정규화 (ephemeral 포트 독립).
+          curl -fsS "http://localhost:${PORT}/v3/api-docs.yaml" \
+            | sed "s#http://localhost:${PORT}#http://localhost:8080#" \
+            > docs/openapi/security-log-search.yaml
+
+          # drift gate — 커밋된 spec 과 다르면 실패.
+          if ! git diff --exit-code docs/openapi/security-log-search.yaml; then
+            echo "::error::OpenAPI spec drift detected. Regenerate locally and commit docs/openapi/security-log-search.yaml (see docs/openapi/README.md)."
+            exit 1
+          fi
+
   integration-test:
     name: Testcontainers IT
     runs-on: ubuntu-24.04
