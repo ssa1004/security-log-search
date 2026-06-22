@@ -93,6 +93,16 @@ jobs:
       - name: Build boot jar
         run: ./gradlew --no-daemon :security-bootstrap:bootJar
 
+      # normalize-openapi.sh 가 mikefarah yq(v4) 를 쓴다. ubuntu 러너 기본 yq 는 보장되지
+      # 않으므로 observability job 과 동일하게 v4 바이너리를 핀해서 설치한다.
+      - name: Install yq (mikefarah v4)
+        env:
+          YQ_VERSION: v4.44.3
+        run: |
+          sudo curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" -o /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
       # 앱은 외부 인프라 없이 부팅된다 (기본 profile: H2 in-memory, OpenSearch/ClickHouse
       # disabled, Kafka lazy) -> service container 불필요. Kotlin top-level main 은
       # ...ApplicationKt 로 컴파일되므로 PropertiesLauncher 로 loader.main 을 override.
@@ -127,7 +137,15 @@ jobs:
             | sed "s#http://localhost:${PORT}#http://localhost:8080#" \
             > docs/openapi/security-log-search.yaml
 
-          # drift gate — 커밋된 spec 과 다르면 실패.
+          # springdoc 는 enum 값 순서 / default 위치를 환경마다 비결정적으로 내보낸다
+          # (예: [FIVE_MINUTES, ONE_HOUR, ONE_DAY] 의 순서가 로컬/CI 에서 다름). 이는 실제
+          # API 변경이 아니라 cosmetic ordering 이므로, 커밋본과 동일한 NORMALIZE 변환
+          # (mapping key 재귀 정렬 + 모든 enum 배열 정렬) 을 적용해 canonical 형태로 만든다.
+          # 로컬(docs/openapi/README.md)과 CI 가 같은 스크립트를 쓰므로 양쪽이 byte-identical.
+          ./scripts/normalize-openapi.sh docs/openapi/security-log-search.yaml
+
+          # drift gate — normalize 후에도 커밋된 spec 과 다르면 실패. normalize 는 ordering
+          # 노이즈만 제거하므로, endpoint/param/enum *값* 같은 실제 API surface 변경은 여전히 잡힌다.
           if ! git diff --exit-code docs/openapi/security-log-search.yaml; then
             echo "::error::OpenAPI spec drift detected. Regenerate locally and commit docs/openapi/security-log-search.yaml (see docs/openapi/README.md)."
             exit 1
