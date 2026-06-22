@@ -1,43 +1,38 @@
 # Dependabot — 의존성 / GitHub Actions 업데이트 자동 PR.
 #
 # SIEM 백엔드라 누적 CVE 회수가 중요 — Spring Boot / OpenSearch / ClickHouse / Flink
-# 의존성과 CI workflow 의 action 핀을 주 1회 점검한다. ecosystem 별로 묶어서 PR 수를 줄임.
+# 의존성과 CI workflow 의 action 핀을 점검한다.
+# 소음(이메일/PR) 최소화 위해 월 1회(monthly) 점검 + ecosystem 별로 전체를 한 PR 로 묶고
+# open-pull-requests-limit 를 5 로 제한한다.
 version: 2
 updates:
   # Gradle — 루트 + 7 서브모듈 (build.gradle.kts 가 디렉토리별로 있으나 directory: "/" 가
-  # 멀티프로젝트 전체를 스캔). minor / patch 는 묶고, major 는 따로 받아 변경 영향 검토.
+  # 멀티프로젝트 전체를 스캔). 월 1회 점검, 모든 업데이트를 단일 그룹 PR 로 배치.
   - package-ecosystem: gradle
     directory: "/"
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
       time: "09:00"
       timezone: Asia/Seoul
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     labels:
       - dependencies
       - gradle
     commit-message:
       prefix: "chore(deps)"
     groups:
-      spring:
+      gradle-all:
         patterns:
-          - "org.springframework*"
-          - "io.spring*"
-      flink:
-        patterns:
-          - "org.apache.flink*"
-      minor-patch:
-        update-types:
-          - minor
-          - patch
+          - "*"
 
   # GitHub Actions — ci.yml / codeql.yml 에서 쓰는 action 핀 (checkout / setup-java /
   # setup-gradle / trivy / codeql 등) 의 SHA / tag 갱신.
+  # 월 1회 점검, 모든 action 업데이트를 단일 그룹 PR 로 배치.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
       time: "09:00"
       timezone: Asia/Seoul
@@ -47,3 +42,7 @@ updates:
       - github-actions
     commit-message:
       prefix: "chore(ci)"
+    groups:
+      github-actions-all:
+        patterns:
+          - "*"
