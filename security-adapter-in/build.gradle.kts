@@ -23,7 +23,7 @@ dependencies {
     implementation("io.micrometer:micrometer-core")
 
     // OpenAPI / Swagger UI.
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 
     // Kotlin null-safety 와 호환되는 Jackson module — Jackson 이 Kotlin data class 의
     // non-null 필드를 인식해야 LocalDateTime / Instant / Enum 역직렬화가 정상 동작한다.
@@ -32,7 +32,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     // Mockito Kotlin helpers — any() / whenever / verify 의 Kotlin friendly DSL.
-    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:6.3.0")
 }
 
 kotlin {
