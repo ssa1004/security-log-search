@@ -63,6 +63,10 @@ object AlertCorrelationJob {
             KafkaSource.builder<AlertRule>()
                 .setBootstrapServers(bootstrap)
                 .setTopics(rulesTopic)
+                // 룰 topic 은 compacted changelog 처럼 다룬다 — broadcast state 를 완전하게
+                // 복구하려면 매 job 인스턴스가 룰 전체를 처음부터 다시 읽어야 한다. nanoTime 으로
+                // 매번 새 consumer group 을 써서 (committed offset 부터 재개하다 일부 룰을
+                // 놓치는 것을 막고) earliest 로 전체 replay 를 강제한다.
                 .setGroupId("security-streaming-rules-" + System.nanoTime())
                 .setStartingOffsets(OffsetsInitializer.earliest())
                 .setValueOnlyDeserializer(RuleDeserializationSchema())

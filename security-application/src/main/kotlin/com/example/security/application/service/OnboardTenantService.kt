@@ -37,6 +37,10 @@ open class OnboardTenantService(
             true,
         )
         val saved = tenants.save(tenant)
+        // 외부 인프라 provisioning (OpenSearch / ClickHouse) 을 DB 트랜잭션 안에서 호출한다.
+        // provisioning 은 모두 idempotent (CREATE ... IF NOT EXISTS) 하고 provisioner 가
+        // 실패를 삼키므로, 인프라 오류로 tenant row 자체가 롤백되지 않게 (운영자가 인프라만
+        // 나중에 재시도 가능) 의도적으로 이 순서를 유지한다.
         indexAdmin.provisionForTenant(saved)
         indexAdmin.applyIlmPolicy(saved)
         indexAdmin.provisionClickHouseRowPolicy(saved)
