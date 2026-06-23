@@ -54,6 +54,9 @@ open class ClickHouseEventStatsAdapter(
 
     private fun querySeries(query: StatsQuery, sourceTable: String): List<TimeBucket> {
         val bucketExpr = query.bucket.toClickHouseExpr("timestamp")
+        // p95 는 항상 0 — ADR-0005 스키마에 latency 컬럼이 없어 quantile 의 입력을 상수 0 으로
+        // 둔 placeholder 다 (TimeBucket.p95LatencyMs 자리만 채움). latency 컬럼 추가 시 0 을 그
+        // 컬럼으로 교체하면 된다. 버그가 아니라 예약된 자리.
         val sql = StringBuilder("SELECT ")
             .append(bucketExpr)
             .append(" AS bucket_ts, count() AS cnt, quantile(0.95)(0) AS p95 FROM ")
