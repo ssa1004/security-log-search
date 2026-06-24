@@ -15,7 +15,7 @@
 ## 무엇이 들어가나
 
 - `security-log-search.yaml` — 빌드 시 생성되는 OpenAPI 3 문서. 외부 참조 / SDK codegen 의 단일 진실값.
-  - 로그 수집 (`/api/v1/ingest`, source 별 ingest)
+  - 로그 수집 (`/api/v1/events`, source 별 ingest)
   - 검색 / 통계 (`/api/v1/search`, `/api/v1/stats`)
   - 알람 / 알람 룰 / Sigma 룰 (`/api/v1/alerts`, `/api/v1/alert-rules`, `/api/v1/sigma-rules`)
   - 테넌트 / 인덱스 운영 / 감사 (`/api/v1/tenants`, `/api/v1/admin/indices`, `/api/v1/audit`)

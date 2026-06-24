@@ -149,7 +149,7 @@ graph LR
 2. **ClickHouse Row Policy**: `WHERE tenant_id = currentSetting('tenant_id')` 강제.
 3. **JWT claim**: 모든 요청은 `tenant_id` claim 을 가져야 하고, application layer 가 query
    에 자동 주입.
-4. **Query rewrite**: SearchService 내부에서 사용자가 보낸 query 에 tenant filter 를 강제로
+4. **Query rewrite**: SearchLogEventsService 내부에서 사용자가 보낸 query 에 tenant filter 를 강제로
    AND 결합 — 사용자가 우회 불가.
 
 ```mermaid
@@ -158,7 +158,7 @@ sequenceDiagram
     participant U as 운영자 (acme)
     participant API as REST API
     participant Sec as SecurityFilterChain
-    participant Svc as SearchService
+    participant Svc as SearchLogEventsService
     participant OS as OpenSearch
     participant CH as ClickHouse
 
@@ -265,7 +265,7 @@ docker compose --profile app up # 위 + 앱 컨테이너
 ```bash
 ./gradlew :security-streaming:jar
 # 빌드된 jar 를 Flink 클러스터에 submit
-flink run -c com.example.security.streaming.AlertCorrelationJob \
+flink run -c com.example.security.streaming.job.AlertCorrelationJob \
   security-streaming/build/libs/security-streaming-0.1.0.jar
 ```
 
@@ -455,7 +455,7 @@ sequenceDiagram
     participant Auth as auth-service
     participant API as security-log-search<br/>(REST API)
     participant Sec as SecurityFilterChain
-    participant Svc as SearchService
+    participant Svc as SearchLogEventsService
     participant OS as OpenSearch
     participant CH as ClickHouse
 
