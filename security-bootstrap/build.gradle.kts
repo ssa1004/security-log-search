@@ -56,7 +56,9 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 }
 
 springBoot {
-    mainClass.set("com.example.security.SecurityLogSearchApplication")
+    // Kotlin top-level `fun main` 은 <파일명>Kt 클래스로 컴파일된다.
+    // SecurityLogSearchApplication.kt → SecurityLogSearchApplicationKt (어노테이션 클래스엔 main 이 없어 부팅 실패했음)
+    mainClass.set("com.example.security.SecurityLogSearchApplicationKt")
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
