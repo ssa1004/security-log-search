@@ -48,7 +48,8 @@
 다양한 source (방화벽 / EDR / 시스템 / 응용 로그) 의 raw event 를 ECS (Elastic Common Schema,
 보안·관측 로그 표준) 또는 OCSF (Open Cybersecurity Schema Framework, 벤더 중립 보안 로그
 표준) 로 정규화하고, Kafka 를 거쳐 OpenSearch (full-text 검색) + ClickHouse (대용량 집계) 로
-듀얼 sink 합니다. Apache Flink 로 실시간 correlation rule (상관 규칙) 을 평가해서 알람을
+듀얼 sink 합니다. Apache Flink 로 실시간 correlation rule (상관 규칙 = 흩어진 여러 로그를 엮어 '한
+사건'으로 판단하는 규칙 — 예: 같은 IP 로 5분 안에 로그인 5번 실패 = 무차별 대입 의심) 을 평가해서 알람을
 발화합니다.
 
 자세한 설계 의사결정은 [docs/adr/](docs/adr/) 의 ADR 15건을 참고하세요 — ECS / OCSF, ClickHouse +
@@ -114,7 +115,7 @@ graph LR
 | `security-application` | 11개 use case + in / out port 정의 |
 | `security-adapter-out` | JPA control plane (tenants / alert_rules / alerts / audit_entries), Kafka producer (events.normalized + alerts.fired), OpenSearch Java client, ClickHouse JDBC |
 | `security-adapter-in` | REST API (ingest / search / stats / alert-rules / alerts / admin / audit / tenants), Kafka consumer (alerts.fired) |
-| `security-streaming` | Apache Flink job — KeyedProcessFunction + MapState + broadcast state 로 룰 평가, Kafka source / sink |
+| `security-streaming` | Apache Flink job — KeyedProcessFunction + MapState + broadcast state (= 로그를 회사별로 줄 세워 최근 N분 상태를 메모리에 들고 평가하고, 탐지 규칙은 모든 일꾼에게 '단체 공지'처럼 똑같이 방송해 job 재시작 없이 즉시 바꿀 수 있게 하는 Flink 부품) 로 룰 평가, Kafka source / sink |
 | `security-bootstrap` | Spring Boot main, application.yml (profile dev / prod), Flyway 마이그레이션, OpenSearch / ClickHouse 초기 스키마 적용 |
 | `e2e-tests` | Testcontainers (Postgres + Kafka + OpenSearch + ClickHouse) 기반 통합 시나리오 |
 
@@ -130,7 +131,7 @@ graph LR
 5. **`EvaluateAlertUseCase`** — Flink job 이 평가 후 Kafka `alerts.fired` 발행 + Spring 측
    consumer 가 INSERT.
 6. **`ListAlertsUseCase`** — `GET /api/v1/alerts` — 타임라인 조회.
-7. **`ManageOpenSearchIndexUseCase`** — admin endpoint — 인덱스 생성 / alias swap / ILM 정책 /
+7. **`ManageOpenSearchIndexUseCase`** — admin endpoint — 인덱스 생성 / alias swap (= 검색은 늘 '별명'으로만 부르고 실제 인덱스는 뒤에 숨겨, 새 인덱스로 교체할 때 별명이 가리키는 대상만 한순간에 바꿔 검색을 한 번도 안 멈추는 방식) / ILM 정책 (= Index Lifecycle Management, 인덱스를 나이에 따라 hot→warm→cold 로 옮기고 오래되면 자동 삭제하는 보관 수명 정책) /
    rollover trigger.
 8. **`QueryAuditLogUseCase`** — `GET /api/v1/audit` — ISMS-P 요구. 누가 언제 어떤 검색 / 룰
    변경 / 알람 처리 했는지 audit.
