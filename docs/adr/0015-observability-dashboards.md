@@ -127,6 +127,19 @@ cardinality 통제:
   dashboard 를 단순화 / 재구성.
 - distributed tracing (OpenTelemetry) 도입 시점에 latency dashboard 와 trace 연동.
 
+## 용어 풀이 (쉽게)
+
+- **RED / USE / Four Golden Signals(관측 모델)** — '무슨 지표를 봐야 하나'를 정해 주는 점검표. RED는 사용자 쪽 서비스용(요청량·오류·응답시간), USE는 인프라 자원용(사용률·포화·오류), Four Golden Signals는 둘을 합친 구글식 4종 신호다.
+- **SLO (Service Level Objective)** — '검색 p99가 1.5초 이내' 같은 스스로 정한 품질 목표선. 이 선을 넘으면 '느려졌다'고 보고 경보를 띄운다.
+- **Rate / Errors / Duration / Saturation** — Rate는 초당 처리량, Errors는 오류율, Duration은 응답 시간, Saturation은 '얼마나 꽉 찼나(포화)'. 시스템 건강을 이 네 각도로 본다.
+- **histogram_quantile / p50·p95·p99** — 응답 시간을 줄 세웠을 때 '50%·95%·99% 지점 값'을 막대 통계(histogram)로 계산하는 것. 평균에 가려지는 '느린 쪽 손님'까지 드러낸다.
+- **cardinality(카디널리티) 통제** — 태그(예: tenant)의 값 종류가 수천 개로 불면 지표가 폭증해 무거워지는데, 이를 묶거나 줄여 막는 것. 라벨 종류가 너무 많아지지 않게 손보는 일.
+- **recording rule(레코딩 룰)** — 자주 쓰는 무거운 계산을 미리 돌려 '요약 지표'로 저장해 두는 Prometheus 기능. 대시보드가 매번 다시 계산하지 않게 해 가볍게 만든다(materialized view의 지표 버전).
+- **scrape / exporter** — Prometheus가 각 부품의 지표를 주기적으로 긁어 오는(scrape) 동작, exporter는 그 부품이 지표를 내놓도록 붙이는 어댑터. 검침원이 집집마다 계량기를 읽고, 계량기가 그 exporter다.
+- **ServiceMonitor (Prometheus Operator)** — 쿠버네티스에서 '어느 서비스의 지표를 긁을지'를 선언으로 등록하는 운영 환경용 설정. 검침 대상을 코드로 명세하는 셈.
+- **runbook(런북)** — 특정 알람이 떴을 때 '먼저 이 패널을 보고, 이렇게 대응하라'를 적어 둔 대응 매뉴얼. 당직자가 그대로 따라 하도록 알람마다 연결해 둔다.
+- **consumer lag / backpressure ratio** — lag은 소비자가 못 따라잡고 밀린 메시지 양(줄 길이), backpressure ratio는 '뒤가 막혀 앞이 눌린' 정도. 둘 다 '어디서 정체가 났나'를 보여 준다.
+
 ## 참고
 
 - [Tom Wilkie — The RED Method](https://www.weave.works/blog/the-red-method-key-metrics-for-microservices-architecture/)

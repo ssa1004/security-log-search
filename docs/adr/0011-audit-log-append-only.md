@@ -57,6 +57,17 @@ ISMS-P 2.9 / SOC 2 / GDPR 등 대부분의 보안 / 컴플라이언스 요구는
 - audit_entries 가 폭증 (일 1억 row) 하면 별도 ClickHouse 또는 S3 Parquet 이관 검토
 - WORM (Write Once Read Many) storage 요구가 들어오면 AWS S3 Object Lock 또는 QLDB 검토
 
+## 용어 풀이 (쉽게)
+
+- **append-only(추가 전용)** — 한 번 적으면 수정·삭제 절대 안 하고 새 줄만 쌓는 장부(은행 통장). 잘못된 게 있으면 지우는 대신 반대 기록을 새 줄로 더한다.
+- **무결성(integrity)** — '기록이 처음 적힌 그대로이고 누가 몰래 고치지 않았다'는 신뢰성. 감사 로그의 생명이라, 고치거나 지우지 못하게 막아 이를 지킨다.
+- **trigger(트리거)** — DB에서 특정 동작(UPDATE/DELETE 시도)이 일어나면 자동으로 끼어들어 막거나 다른 일을 하게 하는 장치. '이 서랍 열면 경보 울림' 같은 자동 반응.
+- **DB role / GRANT(권한)** — 'audit 테이블엔 INSERT만 되고 UPDATE·DELETE는 아예 권한 없음'처럼 계정별로 할 수 있는 일을 DB가 못 박는 것. 코드가 실수해도 권한이 없어 막힌다.
+- **immutable storage / blockchain(QLDB)** — 한 번 쓰면 못 바꾸는 저장소. 블록체인·AWS QLDB가 이런 강한 불변성을 주지만 운영이 무거워, 본 도메인엔 과해서 보류한다.
+- **WORM (Write Once Read Many) / S3 Object Lock** — '한 번 쓰면 여러 번 읽기만 되고 덮어쓰기·삭제는 금지'인 저장 모드. S3 Object Lock이 파일에 그 잠금을 걸어 규제 보존을 강제한다.
+- **cold storage(콜드 스토리지)** — 거의 안 보는 오래된 데이터를 싸고 느린 보관소(S3 등)로 옮겨 두는 것. 자주 안 꺼내는 짐을 창고로 내리는 셈.
+- **SIEM sink / forward(전달)** — 감사 기록을 조직 중앙 보안 시스템(SIEM)으로도 흘려보내(forward) 두 곳이 서로 대조(cross-check)하게 하는 보조 출구.
+
 ## 참고
 
 - [PostgreSQL row-level trigger](https://www.postgresql.org/docs/current/sql-createtrigger.html)

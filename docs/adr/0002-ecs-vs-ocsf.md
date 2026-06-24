@@ -60,6 +60,15 @@ OCSF → ECS 핵심 매핑:
   자체를 OCSF 로 바꿀지 검토. 그 시점에는 ECS → OCSF 역방향 매핑이 필요해질 수도.
 - Sigma rule import 추가 시 (Sigma 는 ECS 친화적) 매핑 정확성 다시 검증
 
+## 용어 풀이 (쉽게)
+
+- **로그 정규화(normalize)** — 방화벽·서버·앱마다 제각각인 로그 양식을 한 가지 통일된 양식으로 다시 적는 일. 나라마다 다른 날짜 표기를 'YYYY-MM-DD' 하나로 맞추는 셈.
+- **표준 스키마(schema)** — 로그의 어느 칸에 무슨 값을 적을지 미리 정해 둔 공통 서식(빈칸 양식). 모두가 같은 칸에 같은 내용을 넣어야 검색·집계가 일관된다.
+- **ECS (Elastic Common Schema)** — Elastic 사가 만든 보안·관측 로그용 공통 서식. 필드 이름을 `event.action`처럼 점으로 이어 쓴다. 본 시스템의 기본(1차) 양식.
+- **OCSF (Open Cybersecurity Schema Framework)** — 특정 회사에 안 묶인 중립 진영(MS·AWS·Splunk 등)이 미는 또 다른 공통 서식. 본 시스템은 이걸 받으면 ECS로 번역해 저장한다.
+- **native (네이티브)** — 어떤 양식을 변환 없이 '원래부터 그 양식으로' 내보내는 것. ECS-native 장비는 ECS로 바로 뱉어 추가 번역이 필요 없다.
+- **schema 힌트** — 들어온 로그가 ECS인지 OCSF인지 클라이언트가 붙여 보내는 짧은 꼬리표. 이걸 보고 시스템이 알맞은 번역기를 고른다.
+
 ## 참고
 
 - [Elastic Common Schema 8.x](https://www.elastic.co/guide/en/ecs/current/index.html)

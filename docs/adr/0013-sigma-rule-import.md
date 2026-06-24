@@ -124,3 +124,14 @@ YAML 을 한 번에 import 가능 (한 파일 = 한 batch).
 - ADR (예정): Sigma 공개 git repo 자동 polling + diff import (운영자가 매번 import 안 해도 자동 동기화)
 - ADR (예정): Sigma `aggregation` / `timeframe` 의 Flink CEP 자동 변환 — 단순 case 만이라도
 - ADR (예정): 변환기 회귀 테스트 — Sigma 공개 룰 100개 샘플로 변환 결과 snapshot
+
+## 용어 풀이 (쉽게)
+
+- **Sigma 룰** — 전 세계 보안 커뮤니티가 YAML로 공유하는 공개 탐지 규칙 표준. 특정 SIEM에 안 묶여, 받아서 우리 시스템 규칙으로 번역해 쓴다(만국 공통 레시피를 우리 주방 언어로 옮기는 격).
+- **보안 인텔리전스 / TTP / IoC / APT** — TTP는 공격자의 '수법(전술·기법·절차)', IoC는 '침해 흔적(나쁜 IP·파일 해시 같은 단서)', APT는 '오래 끈질기게 노리는 고급 공격 집단'. 이런 외부 위협 정보를 빠르게 탐지 규칙으로 들여온다.
+- **룰 DSL** — 이 시스템이 알아듣는 '탐지 규칙 전용 작은 언어'. Sigma 규칙을 이 언어로 번역해야 시스템이 실행할 수 있다.
+- **field modifier (contains / startswith / cidr / base64offset / re)** — Sigma에서 값을 '포함/시작/끝/IP대역(cidr)/base64 변형/정규식(re)'으로 매칭하라고 붙이는 옵션. 변환기가 못 옮기는 복잡한 건 'unsupported(미지원)'로 솔직히 표시한다.
+- **condition 표현(논리 합·곱·집계·timeframe)** — 여러 조건을 'A 그리고 B', '몇 개 중 하나', '몇 분 안 N회'처럼 엮는 식. 단순한 건 자동 변환하고, 복잡한 건 골격만 만들고 꺼 둔(disabled) 채 운영자에게 넘긴다.
+- **false-positive(오탐)** — 실제 위협이 아닌데 경보가 울리는 헛경보. 자동 변환을 검토 없이 켜면 오탐·누락이 생겨, 미지원이 있는 규칙은 기본적으로 꺼 둔다.
+- **disabled 기본값(안전 default)** — 자동 변환 결과를 곧장 켜지 않고 '꺼짐'으로 둬 운영자 검토를 강제하는 안전장치. 잘 모르면 일단 잠가 두는 보수적 기본값.
+- **multi-document YAML** — `---`로 여러 규칙 문서를 한 파일에 이어 붙인 형식. 한 파일을 한 번에 통째로 import 한다.

@@ -139,6 +139,18 @@ severity 는 outcome + verb + HTTP code 조합으로 결정 (401/403 → HIGH, 5
 - ECS 가 CloudTrail / K8s audit 매핑 spec 을 정식 발표하면 본 매퍼의 카테고리 결정 규칙을
   spec 에 맞춰 갱신.
 
+## 용어 풀이 (쉽게)
+
+- **AWS CloudTrail** — AWS 계정 안에서 일어난 모든 작업(누가 어떤 API를 호출했나)을 자동으로 적어 주는 AWS의 활동 기록. 'AWS 안의 CCTV 영수증'인데 양식이 AWS 고유라 ECS로 번역이 필요하다.
+- **K8s audit log(쿠버네티스 감사 로그)** — 쿠버네티스 관리 서버(kube-apiserver)에 들어온 요청(누가 무슨 자원을 만들고 지웠나)을 남긴 기록. 역시 양식이 고유해 ECS로 번역해 받는다.
+- **source별 매퍼 분리(EventNormalizer / RoutingNormalizer)** — source마다 양식이 달라, source별 번역기를 따로 두고 '이건 CloudTrail용, 저건 K8s용'으로 골라 보내는(라우팅) 구조. 새 source는 번역기 한 개만 더하면 된다.
+- **ARN** — AWS 자원·사용자를 가리키는 고유 주소 문자열. '이 작업을 한 사람·역할이 누구인가'를 콕 집는 식별자다.
+- **labels(레이블) 보존** — 정식 칸에 딱 안 맞는 원본 값들을 버리지 않고 '꼬리표(labels)' 칸에 그대로 담아 두는 것. 나중에 펼쳐 쓸 수 있게 원본을 잃지 않으려는 안전장치.
+- **fallback(대체값)** — 원하던 칸(예: 사용자명)이 비어 있을 때 다른 칸에서 그럴듯한 값을 대신 끌어다 쓰는 것. 빈칸으로 두지 않고 차선책을 채워 넣는 셈.
+- **enrichment(보강)** — 들어온 로그에 부족한 정보를 나중 단계에서 덧붙여 더 쓸모 있게 만드는 것. 큰 nested 값을 펼쳐 별도 칸으로 정리하는 후속 가공이 그 예.
+- **mapping explosion(매핑 폭발)** — 검색 엔진이 들어오는 키 종류가 너무 많아져 색인 정의가 걷잡을 수 없이 불어나는 문제. 큰 nested 값을 문자열로 통째 넣어 이 폭발을 줄인다.
+- **nested 객체(중첩 구조)** — 값 안에 값이 또 들어 있는 계단식 구조(요청 파라미터 묶음 등). 그대로 펼치면 칸이 폭증해, 일단 JSON 문자열로 담아 둔다.
+
 ## 참고
 
 - [AWS Docs — CloudTrail event reference](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html)
