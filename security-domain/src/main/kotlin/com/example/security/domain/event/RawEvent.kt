@@ -38,7 +38,13 @@ class RawEvent(
 
     /** key-value 형태의 raw 데이터 — 불변 복사본. */
     @get:JvmName("payload")
-    val payload: Map<String, Any> = java.util.Map.copyOf(payload)
+    val payload: Map<String, Any> = run {
+        // JSON/Kafka 값에 null 이 섞이면 Map.copyOf 가 NPE 를 던진다. null 값 엔트리는 '없음'으로 보고 떨궈 불변 복사.
+        val src: Map<String, Any?> = payload
+        val copy = LinkedHashMap<String, Any>()
+        for ((k, v) in src) if (v != null) copy[k] = v
+        java.util.Collections.unmodifiableMap(copy)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

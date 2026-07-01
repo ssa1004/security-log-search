@@ -27,6 +27,7 @@ class OpenSearchEventSearchAdapterTest {
             "user_name",
             "host_name",
             "host_os",
+            "event_type",
         )
         for (a in allowed) {
             assertThat(OpenSearchEventSearchAdapter.requireAllowedField(a)).isEqualTo(a)
