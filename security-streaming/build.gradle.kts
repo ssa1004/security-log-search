@@ -18,7 +18,7 @@ plugins {
     kotlin("jvm")
 }
 
-val flinkVersion = "1.18.1"
+val flinkVersion = "2.3.0"
 
 dependencies {
     api(project(":security-domain"))
@@ -35,10 +35,10 @@ dependencies {
     testImplementation("org.apache.flink:flink-streaming-java:$flinkVersion:tests")
 
     // Kafka source / sink connector.
-    compileOnly("org.apache.flink:flink-connector-kafka:3.2.0-1.18")
-    compileOnly("org.apache.flink:flink-connector-base:1.18.1")
-    testImplementation("org.apache.flink:flink-connector-kafka:3.2.0-1.18")
-    testImplementation("org.apache.flink:flink-connector-base:1.18.1")
+    compileOnly("org.apache.flink:flink-connector-kafka:5.0.0-2.2")
+    compileOnly("org.apache.flink:flink-connector-base:2.3.0")
+    testImplementation("org.apache.flink:flink-connector-kafka:5.0.0-2.2")
+    testImplementation("org.apache.flink:flink-connector-base:2.3.0")
 
     // JSON 직렬화 — Flink 기본은 POJO serializer 라 record / nested type 은 Jackson 권장.
     implementation("com.fasterxml.jackson.core:jackson-databind")

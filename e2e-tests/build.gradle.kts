@@ -25,10 +25,10 @@ dependencies {
     testImplementation("org.testcontainers:kafka")
     testImplementation("org.testcontainers:clickhouse")
     // OpenSearch testcontainer 는 module 이름이 다름.
-    testImplementation("org.opensearch:opensearch-testcontainers:2.1.2")
+    testImplementation("org.opensearch:opensearch-testcontainers:4.1.0")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.assertj:assertj-core")
-    testImplementation("org.awaitility:awaitility:4.2.2")
+    testImplementation("org.awaitility:awaitility:4.3.0")
 }
 
 kotlin {

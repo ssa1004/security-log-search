@@ -11,10 +11,10 @@ plugins {
 dependencies {
     // Domain 은 외부 framework 의존성 금지. JSR-310 (java.time) + Kotlin stdlib 만 사용.
 
-    testImplementation(platform("org.junit:junit-bom:5.10.5"))
+    testImplementation(platform("org.junit:junit-bom:6.1.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testImplementation("org.assertj:assertj-core:3.26.3")
+    testImplementation("org.assertj:assertj-core:3.27.7")
 }
 
 kotlin {

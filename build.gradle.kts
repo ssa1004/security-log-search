@@ -5,22 +5,22 @@
 // 같은 의존성은 각 모듈 build.gradle.kts 에서 명시적으로만 선언합니다.
 plugins {
     java
-    id("org.springframework.boot") version "3.5.15" apply false
+    id("org.springframework.boot") version "4.1.0" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
     // OpenAPI spec build-time export — 실제 적용은 security-bootstrap 모듈.
     id("org.springdoc.openapi-gradle-plugin") version "1.9.0" apply false
     // 전 모듈 (domain / application / adapter / streaming / bootstrap / e2e) 이 Kotlin.
     // 적용은 각 모듈 build.gradle.kts 에서만. 버전은 Gradle 8.10 번들 Kotlin 과 정렬.
-    kotlin("jvm") version "1.9.24" apply false
+    kotlin("jvm") version "2.4.10" apply false
     // plugin.spring — @Component / @Controller / @Service 등 Spring 어노테이션 class 를 자동
     //                  open 처리해 CGLIB proxy 가능하게 한다. adapter-in / adapter-out 에 적용.
-    kotlin("plugin.spring") version "1.9.24" apply false
+    kotlin("plugin.spring") version "2.4.10" apply false
     // plugin.jpa — @Entity 가 붙은 class 에 no-arg constructor 합성. adapter-out 만 사용.
-    kotlin("plugin.jpa") version "1.9.24" apply false
+    kotlin("plugin.jpa") version "2.4.10" apply false
     // Kover — Kotlin-native 코드 커버리지. 프로덕션 소스가 100% Kotlin 이라 JaCoCo 대신 Kover
     //         를 쓴다. 루트에 적용하면 koverHtmlReport / koverXmlReport 가 하위 모듈 (kover
     //         적용된) 커버리지를 집계한다.
-    id("org.jetbrains.kotlinx.kover") version "0.8.3"
+    id("org.jetbrains.kotlinx.kover") version "0.9.9"
 }
 
 allprojects {
@@ -70,7 +70,7 @@ subprojects {
 
     the<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension>().apply {
         imports {
-            mavenBom("org.springframework.boot:spring-boot-dependencies:3.5.15")
+            mavenBom("org.springframework.boot:spring-boot-dependencies:4.1.0")
         }
     }
 
